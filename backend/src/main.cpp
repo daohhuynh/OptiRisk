@@ -17,14 +17,14 @@
 #include <random>
 #include <atomic>
 #include <csignal>
-#include <algorithm>
-
 #include "memory/csr_graph.hpp"
 #include "concurrency/disruptor.hpp"
 #include "network/wire_protocol.hpp"
 #include "network/ws_listener.hpp"
 #include "network/udp_publisher.hpp"
+#include "utils/affinity.hpp"
 #include "memory/csr_graph.hpp"
+#include "memory/options_book.hpp"
 #include "market/order_book.hpp"
 #include "compute/simd_engine.hpp"
 #include "compute/cascade_engine.hpp"
@@ -46,6 +46,7 @@ static void signal_handler(int) {
 //
 static void network_thread(optirisk::concurrency::DisruptorEngine& engine,
                            optirisk::network::WsListener& listener) {
+    optirisk::utils::pin_thread_to_core(1); // Isolate Network to Core 1
     (void)engine; // WsListener pushes to engine via the on_shock callback
     listener.run(); // Blocks until shutdown
 }
@@ -57,8 +58,11 @@ static void network_thread(optirisk::concurrency::DisruptorEngine& engine,
 //
 static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
                            optirisk::memory::CSRGraph& graph,
+                           optirisk::memory::OptionsBook& options,
                            optirisk::market::CLOBEngine& clob,
                            optirisk::network::UdpPublisher& udp) {
+    optirisk::utils::pin_thread_to_core(2); // Isolate Math/Physics to Core 2
+
     uint64_t read_seq = 0;
     uint32_t tick_counter = 0;
 
@@ -90,7 +94,7 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
         }
 
         // 2. Cascade Physics Loop 
-        auto stats = optirisk::compute::run_cascade_tick(clob, graph, shock);
+        auto stats = optirisk::compute::run_cascade_tick(clob, graph, options, shock);
 
         // Publish TickDelta for Hero Firm as summary (and potentially all defaults in a real setup)
         auto tick_seq = engine.tick_ring.claim(engine.broadcast_cursor, g_running);
@@ -121,6 +125,8 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
 static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine,
                              optirisk::network::WsListener& listener,
                              optirisk::network::UdpPublisher& udp) {
+    optirisk::utils::pin_thread_to_core(3); // Isolate Exgress Network to Core 3
+
     uint64_t read_seq = 0;
     uint64_t last_report_seq = 0;
     auto last_report = std::chrono::steady_clock::now();
@@ -245,6 +251,11 @@ int main() {
     optirisk::market::init_clob(clob);
     std::printf("[init] CLOB Engine armed with realistic depth\n");
 
+    // Initialize OptionsBook
+    static optirisk::memory::OptionsBook options;
+    optirisk::memory::init_options_book(options);
+    std::printf("[init] Options Engine seeded with volatile Call/Put exposure\n");
+
     // Create disruptor engine (static → .bss)
     static optirisk::concurrency::DisruptorEngine engine{};
     std::printf("[init] DisruptorEngine: %zu KB total ring memory\n",
@@ -268,7 +279,7 @@ int main() {
 
     // Launch pipeline threads
     std::thread t1(network_thread,   std::ref(engine), std::ref(listener));
-    std::thread t2(compute_thread,   std::ref(engine), std::ref(graph), std::ref(clob), std::ref(udp));
+    std::thread t2(compute_thread,   std::ref(engine), std::ref(graph), std::ref(options), std::ref(clob), std::ref(udp));
     std::thread t3(broadcast_thread, std::ref(engine), std::ref(listener), std::ref(udp));
 
     std::printf("[main] Pipeline running on WS port 8080. Press Ctrl+C to stop.\n\n");

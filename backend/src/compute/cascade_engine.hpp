@@ -15,6 +15,7 @@
 #include "memory/csr_graph.hpp"
 #include "market/order_book.hpp"
 #include "compute/simd_engine.hpp"
+#include "compute/black_scholes_simd.hpp"
 
 namespace optirisk::compute {
 
@@ -35,6 +36,7 @@ __attribute__((always_inline))
 inline CascadeStats run_cascade_tick(
     optirisk::market::CLOBEngine& clob,
     optirisk::memory::CSRGraph& graph,
+    optirisk::memory::OptionsBook& options,
     const optirisk::network::ShockPayload& shock
 ) noexcept {
     const uint64_t start_cycles = read_cycles();
@@ -94,7 +96,34 @@ inline CascadeStats run_cascade_tick(
             // Let's just use the absolute multipliers vs baseline.
         }
 
-        // To make this perfectly fit, let's just use the SIMD engine's apply_shock_simd.
+        // STEP A.1: Option Greeks & Delta Hedging (Gamma Squeeze Mechanic)
+        // Options exclusively track the Equities market in this setup.
+        alignas(64) std::array<float, optirisk::memory::MAX_NODES> hedge_volumes{};
+        float current_equities_price = static_cast<float>(clob.books[0].last_price);
+
+        // Execute extreme mathematical FMA SIMD block
+        compute_options_m2m(&options, current_equities_price, graph.num_nodes, hedge_volumes.data());
+
+        // Dump resulting hedges immediately into Limit Order Book
+        for (uint32_t i = 0; i < graph.num_nodes; ++i) {
+            float hv = hedge_volumes[i];
+            if (hv != 0.0f) {
+                // To remain Delta-Neutral, node triggers market order.
+                // Slippage is accounted natively by the CLOB shifting its `last_price`.
+                if (hv > 0.0f) {
+                    clob.books[0].market_buy(hv); 
+                } else {
+                    clob.books[0].market_sell(-hv);
+                }
+            }
+        }
+        
+        // Re-read potentially shifted Equities price to feed the Linear M2M below
+        if (current_round > 0) {
+            iteration_shock.equities_delta = (clob.books[0].last_price - cur_eq) / cur_eq;
+        }
+
+        // STEP A.2: Linear Mark-to-Market (SIMD)
         // apply_shock_simd updates risk and defaults, returning new defaults count.
         auto tick_result = apply_shock_simd(graph, (current_round == 0) ? shock : iteration_shock);
         
