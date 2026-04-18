@@ -1,38 +1,49 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  darkMode: "class",
-  content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./hooks/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  darkMode: 'class',
+  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './hooks/**/*.{ts,tsx}'],
   theme: {
     extend: {
-      colors: {
-        risk: {
-          low:    "#22c55e",  // Green
-          medium: "#f59e0b",  // Amber
-          high:   "#ef4444",  // Red
-          critical: "#dc2626",
-        },
-        surface: {
-          900: "#0a0a0f",
-          800: "#12121a",
-          700: "#1a1a26",
-          600: "#252533",
-        },
-      },
       fontFamily: {
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+        sans: ['Chakra Petch', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      colors: {
+        terminal: {
+          bg: '#040810',
+          surface: '#0a1628',
+          'surface-2': '#0f2040',
+          border: 'rgba(0,200,255,0.15)',
+          text: '#c8e6f5',
+          muted: '#4a7a9b',
+          accent: '#00e5ff',
+        },
+        risk: {
+          idle: '#1a3a5c',
+          stressed: '#ff8c00',
+          critical: '#ff5000',
+          defaulted: '#ff2020',
+          hero: '#a855f7',
+        },
       },
       animation: {
-        "pulse-risk": "pulse-risk 2s ease-in-out infinite",
+        'pulse-risk': 'pulse-risk 1s ease-in-out infinite',
+        'scan-line': 'scan-line 8s linear infinite',
+        'blink': 'blink 1s step-end infinite',
       },
       keyframes: {
-        "pulse-risk": {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.5" },
+        'pulse-risk': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.4' },
+        },
+        'scan-line': {
+          '0%': { transform: 'translateY(-100%)' },
+          '100%': { transform: 'translateY(100vh)' },
+        },
+        'blink': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
         },
       },
     },

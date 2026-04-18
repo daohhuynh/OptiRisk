@@ -1,68 +1,45 @@
-"use client";
+'use client';
 
-import { Activity, Radio, Shield } from "lucide-react";
-import RiskMap from "@/components/RiskMap";
-import { useRiskSocket } from "@/hooks/useRiskSocket";
+import dynamic from 'next/dynamic';
+import TopControls from '@/components/panels/TopControls';
+import NodeInfoCard from '@/components/panels/NodeInfoCard';
+import StatusBar from '@/components/panels/StatusBar';
+import ChatPanel from '@/components/chat/ChatPanel';
+import { useUIStore } from '@/store/uiStore';
+
+const MapContainer = dynamic(() => import('@/components/map/MapContainer'), { ssr: false });
 
 export default function Home() {
-  const { isConnected, nodeCount, lastLatency } = useRiskSocket();
+  const { isChatOpen } = useUIStore();
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-surface-900">
-      {/* ── 3D Canvas ──────────────────────────────────────────── */}
-      <div className="canvas-container">
-        <RiskMap />
-      </div>
+    <main className="relative w-screen h-screen overflow-hidden bg-[#040810] scan-overlay">
+      {/* Full-screen map */}
+      <MapContainer />
 
-      {/* ── HUD Overlay ────────────────────────────────────────── */}
-      <div className="hud-overlay">
-        {/* Top Bar */}
-        <header className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <Shield className="w-6 h-6 text-indigo-400" />
-            <h1 className="text-lg font-semibold tracking-tight font-mono">
-              OPTIRISK
-            </h1>
-            <span className="text-xs text-slate-500 font-mono ml-2">
-              v0.1.0
-            </span>
+      {/* HUD overlay */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+
+        {/* Top controls strip */}
+        <div className="pointer-events-auto absolute top-0 left-0 right-0">
+          <TopControls />
+        </div>
+
+        {/* Node info card — right side */}
+        <div className="pointer-events-auto absolute top-16 right-4">
+          <NodeInfoCard />
+        </div>
+
+        {/* Chat / event log — left side */}
+        {isChatOpen && (
+          <div className="pointer-events-auto absolute bottom-12 left-4 top-16 w-80">
+            <ChatPanel />
           </div>
+        )}
 
-          <div className="flex items-center gap-6 text-sm font-mono">
-            {/* Connection Status */}
-            <div className="flex items-center gap-2">
-              <span
-                className={`status-dot ${
-                  isConnected ? "connected" : "disconnected"
-                }`}
-              />
-              <span className="text-slate-400">
-                {isConnected ? "LIVE" : "OFFLINE"}
-              </span>
-            </div>
-
-            {/* Node Count */}
-            <div className="flex items-center gap-2 text-slate-400">
-              <Radio className="w-4 h-4" />
-              <span>{nodeCount} nodes</span>
-            </div>
-
-            {/* Latency */}
-            <div className="flex items-center gap-2 text-slate-400">
-              <Activity className="w-4 h-4" />
-              <span>{lastLatency} μs</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Bottom Info Bar */}
-        <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between">
-          <p className="text-xs text-slate-600 font-mono">
-            Binary WebSocket · CSR Graph Engine · LMAX Disruptor Pipeline
-          </p>
-          <p className="text-xs text-slate-600 font-mono">
-            C++23 Zero-Allocation Backend
-          </p>
+        {/* Bottom status bar */}
+        <div className="pointer-events-auto absolute bottom-0 left-0 right-0">
+          <StatusBar />
         </div>
       </div>
     </main>

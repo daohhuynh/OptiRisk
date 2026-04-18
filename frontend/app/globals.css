@@ -1,100 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
-
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --accent: #6366f1;
-  --risk-low: #22c55e;
-  --risk-medium: #f59e0b;
-  --risk-high: #ef4444;
+  --bg-primary: #040810;
+  --bg-surface: #0a1628;
+  --bg-surface-2: #0f2040;
+  --border-subtle: rgba(0, 200, 255, 0.15);
+  --text-primary: #c8e6f5;
+  --text-muted: #4a7a9b;
+  --cyan-glow: #00e5ff;
+  --risk-idle: #1a3a5c;
+  --risk-stressed: #ff8c00;
+  --risk-critical: #ff5000;
+  --risk-defaulted: #ff2020;
+  --risk-hero: #a855f7;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  background-color: var(--bg-primary);
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Chakra Petch', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+
+/* Panel bracket decoration */
+.panel-bracket {
+  position: relative;
+  border: 1px solid var(--border-subtle);
+  background: rgba(10, 22, 40, 0.9);
+  backdrop-filter: blur(8px);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-
-/* Canvas container */
-.canvas-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
-}
-
-/* HUD overlay */
-.hud-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.hud-overlay > * {
-  pointer-events: auto;
-}
-
-/* Status indicator */
-.status-dot {
+.panel-bracket::before,
+.panel-bracket::after {
+  content: '';
+  position: absolute;
   width: 8px;
   height: 8px;
+  border-color: var(--cyan-glow);
+  border-style: solid;
+  opacity: 0.6;
+}
+
+.panel-bracket::before {
+  top: -1px;
+  left: -1px;
+  border-width: 1px 0 0 1px;
+}
+
+.panel-bracket::after {
+  bottom: -1px;
+  right: -1px;
+  border-width: 0 1px 1px 0;
+}
+
+/* Scan line overlay */
+.scan-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 200, 255, 0.015) 2px,
+    rgba(0, 200, 255, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Status dot */
+.status-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  display: inline-block;
+  background: var(--text-muted);
 }
 
 .status-dot.connected {
-  background-color: var(--risk-low);
-  box-shadow: 0 0 8px var(--risk-low);
-  animation: pulse-glow 2s ease-in-out infinite;
+  background: var(--cyan-glow);
+  box-shadow: 0 0 6px var(--cyan-glow);
+  animation: pulse-connected 2s ease-in-out infinite;
 }
 
-.status-dot.disconnected {
-  background-color: var(--risk-high);
-  box-shadow: 0 0 8px var(--risk-high);
+.status-dot.error {
+  background: var(--risk-defaulted);
+  box-shadow: 0 0 6px var(--risk-defaulted);
 }
 
-@keyframes pulse-glow {
+@keyframes pulse-connected {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0.5; }
 }
+
+/* MapLibre map container */
+.maplibregl-map {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Hide MapLibre attribution (hackathon) */
+.maplibregl-ctrl-attrib { display: none !important; }
+.maplibregl-ctrl-logo { display: none !important; }
