@@ -33,78 +33,78 @@ interface HubCity {
 
 const HUB_CITIES: Record<string, HubCity[]> = {
   NYC: [
-    { name: 'New York',       lat: 40.75,  lon: -74.00,  weight: 40, jitterRadiusDeg: 0.50 },
-    { name: 'Boston',         lat: 42.36,  lon: -71.15,  weight: 10, jitterRadiusDeg: 0.60 },
-    { name: 'Toronto',        lat: 43.70,  lon: -79.40,  weight: 8,  jitterRadiusDeg: 0.65 },
-    { name: 'Chicago',        lat: 41.88,  lon: -87.63,  weight: 8,  jitterRadiusDeg: 0.65 },
-    { name: 'Washington DC',  lat: 38.90,  lon: -77.04,  weight: 5,  jitterRadiusDeg: 0.50 },
-    { name: 'Philadelphia',   lat: 39.95,  lon: -75.17,  weight: 4,  jitterRadiusDeg: 0.45 },
-    { name: 'Montreal',       lat: 45.50,  lon: -73.57,  weight: 4,  jitterRadiusDeg: 0.50 },
-    { name: 'Atlanta',        lat: 33.75,  lon: -84.39,  weight: 3,  jitterRadiusDeg: 0.50 },
-    { name: 'Charlotte',      lat: 35.23,  lon: -80.84,  weight: 3,  jitterRadiusDeg: 0.45 },
-    { name: 'Miami',          lat: 25.85,  lon: -80.30,  weight: 3,  jitterRadiusDeg: 0.40 },
-    { name: 'San Francisco',  lat: 37.75,  lon: -122.20, weight: 4,  jitterRadiusDeg: 0.45 },
-    { name: 'Los Angeles',    lat: 34.05,  lon: -118.20, weight: 4,  jitterRadiusDeg: 0.50 },
-    { name: 'Seattle',        lat: 47.60,  lon: -122.20, weight: 3,  jitterRadiusDeg: 0.45 },
-    { name: 'Dallas',         lat: 32.78,  lon: -96.80,  weight: 2,  jitterRadiusDeg: 0.50 },
-    { name: 'Denver',         lat: 39.74,  lon: -104.99, weight: 2,  jitterRadiusDeg: 0.50 },
+    { name: 'New York',       lat: 40.75,  lon: -74.00,  weight: 40, jitterRadiusDeg: 0.35 },
+    { name: 'Boston',         lat: 42.36,  lon: -71.15,  weight: 10, jitterRadiusDeg: 0.45 },
+    { name: 'Toronto',        lat: 43.70,  lon: -79.40,  weight: 8,  jitterRadiusDeg: 0.45 },
+    { name: 'Chicago',        lat: 41.88,  lon: -87.63,  weight: 8,  jitterRadiusDeg: 0.45 },
+    { name: 'Washington DC',  lat: 38.90,  lon: -77.04,  weight: 5,  jitterRadiusDeg: 0.35 },
+    { name: 'Philadelphia',   lat: 39.95,  lon: -75.17,  weight: 4,  jitterRadiusDeg: 0.35 },
+    { name: 'Montreal',       lat: 45.50,  lon: -73.57,  weight: 4,  jitterRadiusDeg: 0.35 },
+    { name: 'Atlanta',        lat: 33.75,  lon: -84.39,  weight: 3,  jitterRadiusDeg: 0.35 },
+    { name: 'Charlotte',      lat: 35.23,  lon: -80.84,  weight: 3,  jitterRadiusDeg: 0.35 },
+    { name: 'Miami',          lat: 25.85,  lon: -80.30,  weight: 3,  jitterRadiusDeg: 0.30 },
+    { name: 'San Francisco',  lat: 37.75,  lon: -122.20, weight: 4,  jitterRadiusDeg: 0.30 },
+    { name: 'Los Angeles',    lat: 34.05,  lon: -118.20, weight: 4,  jitterRadiusDeg: 0.35 },
+    { name: 'Seattle',        lat: 47.60,  lon: -122.20, weight: 3,  jitterRadiusDeg: 0.30 },
+    { name: 'Dallas',         lat: 32.78,  lon: -96.80,  weight: 2,  jitterRadiusDeg: 0.35 },
+    { name: 'Denver',         lat: 39.74,  lon: -104.99, weight: 2,  jitterRadiusDeg: 0.35 },
   ],
   London: [
-    { name: 'London',         lat: 51.51,  lon: -0.13,   weight: 35, jitterRadiusDeg: 0.50 },
-    { name: 'Paris',          lat: 48.86,  lon: 2.35,    weight: 10, jitterRadiusDeg: 0.60 },
-    { name: 'Frankfurt',      lat: 50.11,  lon: 8.68,    weight: 9,  jitterRadiusDeg: 0.60 },
-    { name: 'Zurich',         lat: 47.38,  lon: 8.54,    weight: 6,  jitterRadiusDeg: 0.50 },
-    { name: 'Amsterdam',      lat: 52.37,  lon: 4.90,    weight: 6,  jitterRadiusDeg: 0.45 },
-    { name: 'Milan',          lat: 45.46,  lon: 9.19,    weight: 5,  jitterRadiusDeg: 0.50 },
-    { name: 'Madrid',         lat: 40.42,  lon: -3.70,   weight: 4,  jitterRadiusDeg: 0.50 },
-    { name: 'Dublin',         lat: 53.35,  lon: -6.26,   weight: 4,  jitterRadiusDeg: 0.40 },
-    { name: 'Stockholm',      lat: 59.33,  lon: 18.00,   weight: 3,  jitterRadiusDeg: 0.45 },
-    { name: 'Brussels',       lat: 50.85,  lon: 4.35,    weight: 3,  jitterRadiusDeg: 0.40 },
-    { name: 'Luxembourg',     lat: 49.61,  lon: 6.13,    weight: 3,  jitterRadiusDeg: 0.35 },
-    { name: 'Copenhagen',     lat: 55.68,  lon: 12.50,   weight: 2,  jitterRadiusDeg: 0.40 },
-    { name: 'Oslo',           lat: 59.91,  lon: 10.75,   weight: 2,  jitterRadiusDeg: 0.40 },
-    { name: 'Vienna',         lat: 48.21,  lon: 16.37,   weight: 2,  jitterRadiusDeg: 0.40 },
-    { name: 'Warsaw',         lat: 52.23,  lon: 21.01,   weight: 2,  jitterRadiusDeg: 0.50 },
-    { name: 'Lisbon',         lat: 38.75,  lon: -9.10,   weight: 2,  jitterRadiusDeg: 0.35 },
-    { name: 'Helsinki',       lat: 60.20,  lon: 24.80,   weight: 2,  jitterRadiusDeg: 0.35 },
+    { name: 'London',         lat: 51.51,  lon: -0.13,   weight: 35, jitterRadiusDeg: 0.35 },
+    { name: 'Paris',          lat: 48.86,  lon: 2.35,    weight: 10, jitterRadiusDeg: 0.45 },
+    { name: 'Frankfurt',      lat: 50.11,  lon: 8.68,    weight: 9,  jitterRadiusDeg: 0.45 },
+    { name: 'Zurich',         lat: 47.38,  lon: 8.54,    weight: 6,  jitterRadiusDeg: 0.35 },
+    { name: 'Amsterdam',      lat: 52.37,  lon: 4.90,    weight: 6,  jitterRadiusDeg: 0.30 },
+    { name: 'Milan',          lat: 45.46,  lon: 9.19,    weight: 5,  jitterRadiusDeg: 0.35 },
+    { name: 'Madrid',         lat: 40.42,  lon: -3.70,   weight: 4,  jitterRadiusDeg: 0.35 },
+    { name: 'Dublin',         lat: 53.35,  lon: -6.26,   weight: 4,  jitterRadiusDeg: 0.30 },
+    { name: 'Stockholm',      lat: 59.33,  lon: 18.00,   weight: 3,  jitterRadiusDeg: 0.30 },
+    { name: 'Brussels',       lat: 50.85,  lon: 4.35,    weight: 3,  jitterRadiusDeg: 0.30 },
+    { name: 'Luxembourg',     lat: 49.61,  lon: 6.13,    weight: 3,  jitterRadiusDeg: 0.25 },
+    { name: 'Copenhagen',     lat: 55.68,  lon: 12.50,   weight: 2,  jitterRadiusDeg: 0.30 },
+    { name: 'Oslo',           lat: 59.91,  lon: 10.75,   weight: 2,  jitterRadiusDeg: 0.30 },
+    { name: 'Vienna',         lat: 48.21,  lon: 16.37,   weight: 2,  jitterRadiusDeg: 0.30 },
+    { name: 'Warsaw',         lat: 52.23,  lon: 21.01,   weight: 2,  jitterRadiusDeg: 0.35 },
+    { name: 'Lisbon',         lat: 38.75,  lon: -9.10,   weight: 2,  jitterRadiusDeg: 0.25 },
+    { name: 'Helsinki',       lat: 60.20,  lon: 24.80,   weight: 2,  jitterRadiusDeg: 0.25 },
   ],
   Tokyo: [
-    { name: 'Tokyo',          lat: 35.70,  lon: 139.72,  weight: 40, jitterRadiusDeg: 0.50 },
-    { name: 'Osaka',          lat: 34.69,  lon: 135.50,  weight: 12, jitterRadiusDeg: 0.50 },
-    { name: 'Seoul',          lat: 37.57,  lon: 126.98,  weight: 12, jitterRadiusDeg: 0.50 },
-    { name: 'Nagoya',         lat: 35.18,  lon: 136.90,  weight: 6,  jitterRadiusDeg: 0.40 },
-    { name: 'Fukuoka',        lat: 33.59,  lon: 130.45,  weight: 5,  jitterRadiusDeg: 0.35 },
-    { name: 'Kyoto',          lat: 35.01,  lon: 135.77,  weight: 4,  jitterRadiusDeg: 0.35 },
-    { name: 'Sapporo',        lat: 43.06,  lon: 141.35,  weight: 3,  jitterRadiusDeg: 0.45 },
-    { name: 'Busan',          lat: 35.15,  lon: 129.00,  weight: 4,  jitterRadiusDeg: 0.35 },
-    { name: 'Taipei',         lat: 25.03,  lon: 121.57,  weight: 4,  jitterRadiusDeg: 0.35 },
+    { name: 'Tokyo',          lat: 35.70,  lon: 139.72,  weight: 40, jitterRadiusDeg: 0.35 },
+    { name: 'Osaka',          lat: 34.69,  lon: 135.50,  weight: 12, jitterRadiusDeg: 0.35 },
+    { name: 'Seoul',          lat: 37.57,  lon: 126.98,  weight: 12, jitterRadiusDeg: 0.35 },
+    { name: 'Nagoya',         lat: 35.18,  lon: 136.90,  weight: 6,  jitterRadiusDeg: 0.30 },
+    { name: 'Fukuoka',        lat: 33.59,  lon: 130.45,  weight: 5,  jitterRadiusDeg: 0.25 },
+    { name: 'Kyoto',          lat: 35.01,  lon: 135.77,  weight: 4,  jitterRadiusDeg: 0.25 },
+    { name: 'Sapporo',        lat: 43.06,  lon: 141.35,  weight: 3,  jitterRadiusDeg: 0.30 },
+    { name: 'Busan',          lat: 35.15,  lon: 129.00,  weight: 4,  jitterRadiusDeg: 0.25 },
+    { name: 'Taipei',         lat: 25.03,  lon: 121.57,  weight: 4,  jitterRadiusDeg: 0.25 },
   ],
   HongKong: [
-    { name: 'Hong Kong',      lat: 22.40,  lon: 114.13,  weight: 30, jitterRadiusDeg: 0.35 },
-    { name: 'Singapore',      lat: 1.35,   lon: 103.82,  weight: 15, jitterRadiusDeg: 0.22 },
-    { name: 'Shanghai',       lat: 31.23,  lon: 121.47,  weight: 12, jitterRadiusDeg: 0.50 },
-    { name: 'Shenzhen',       lat: 22.60,  lon: 114.05,  weight: 8,  jitterRadiusDeg: 0.28 },
-    { name: 'Taipei',         lat: 25.03,  lon: 121.57,  weight: 5,  jitterRadiusDeg: 0.35 },
-    { name: 'Bangkok',        lat: 13.75,  lon: 100.52,  weight: 5,  jitterRadiusDeg: 0.50 },
-    { name: 'Kuala Lumpur',   lat: 3.14,   lon: 101.69,  weight: 5,  jitterRadiusDeg: 0.40 },
-    { name: 'Jakarta',        lat: -6.21,  lon: 106.85,  weight: 5,  jitterRadiusDeg: 0.35 },
-    { name: 'Manila',         lat: 14.60,  lon: 120.98,  weight: 4,  jitterRadiusDeg: 0.35 },
-    { name: 'Ho Chi Minh City', lat: 10.82, lon: 106.62, weight: 6,  jitterRadiusDeg: 0.40 },
-    { name: 'Guangzhou',      lat: 23.13,  lon: 113.26,  weight: 3,  jitterRadiusDeg: 0.40 },
+    { name: 'Hong Kong',      lat: 22.40,  lon: 114.13,  weight: 30, jitterRadiusDeg: 0.25 },
+    { name: 'Singapore',      lat: 1.35,   lon: 103.82,  weight: 15, jitterRadiusDeg: 0.15 },
+    { name: 'Shanghai',       lat: 31.23,  lon: 121.47,  weight: 12, jitterRadiusDeg: 0.35 },
+    { name: 'Shenzhen',       lat: 22.60,  lon: 114.05,  weight: 8,  jitterRadiusDeg: 0.20 },
+    { name: 'Taipei',         lat: 25.03,  lon: 121.57,  weight: 5,  jitterRadiusDeg: 0.25 },
+    { name: 'Bangkok',        lat: 13.75,  lon: 100.52,  weight: 5,  jitterRadiusDeg: 0.35 },
+    { name: 'Kuala Lumpur',   lat: 3.14,   lon: 101.69,  weight: 5,  jitterRadiusDeg: 0.30 },
+    { name: 'Jakarta',        lat: -6.21,  lon: 106.85,  weight: 5,  jitterRadiusDeg: 0.25 },
+    { name: 'Manila',         lat: 14.60,  lon: 120.98,  weight: 4,  jitterRadiusDeg: 0.25 },
+    { name: 'Ho Chi Minh City', lat: 10.82, lon: 106.62, weight: 6,  jitterRadiusDeg: 0.30 },
+    { name: 'Guangzhou',      lat: 23.13,  lon: 113.26,  weight: 3,  jitterRadiusDeg: 0.30 },
   ],
   Dubai: [
-    { name: 'Dubai',          lat: 25.20,  lon: 55.27,   weight: 35, jitterRadiusDeg: 0.42 },
-    { name: 'Abu Dhabi',      lat: 24.47,  lon: 54.40,   weight: 12, jitterRadiusDeg: 0.40 },
-    { name: 'Riyadh',         lat: 24.71,  lon: 46.67,   weight: 10, jitterRadiusDeg: 0.60 },
-    { name: 'Doha',           lat: 25.29,  lon: 51.53,   weight: 8,  jitterRadiusDeg: 0.35 },
-    { name: 'Manama',         lat: 26.23,  lon: 50.58,   weight: 5,  jitterRadiusDeg: 0.28 },
-    { name: 'Kuwait City',    lat: 29.38,  lon: 47.99,   weight: 5,  jitterRadiusDeg: 0.35 },
-    { name: 'Muscat',         lat: 23.59,  lon: 58.41,   weight: 4,  jitterRadiusDeg: 0.35 },
-    { name: 'Tel Aviv',       lat: 32.09,  lon: 34.82,   weight: 4,  jitterRadiusDeg: 0.35 },
-    { name: 'Istanbul',       lat: 41.01,  lon: 28.98,   weight: 5,  jitterRadiusDeg: 0.45 },
-    { name: 'Cairo',          lat: 30.04,  lon: 31.24,   weight: 4,  jitterRadiusDeg: 0.50 },
-    { name: 'Amman',          lat: 31.95,  lon: 35.93,   weight: 3,  jitterRadiusDeg: 0.40 },
-    { name: 'Beirut',         lat: 33.89,  lon: 35.51,   weight: 3,  jitterRadiusDeg: 0.35 },
+    { name: 'Dubai',          lat: 25.20,  lon: 55.27,   weight: 35, jitterRadiusDeg: 0.30 },
+    { name: 'Abu Dhabi',      lat: 24.47,  lon: 54.40,   weight: 12, jitterRadiusDeg: 0.30 },
+    { name: 'Riyadh',         lat: 24.71,  lon: 46.67,   weight: 10, jitterRadiusDeg: 0.45 },
+    { name: 'Doha',           lat: 25.29,  lon: 51.53,   weight: 8,  jitterRadiusDeg: 0.25 },
+    { name: 'Manama',         lat: 26.23,  lon: 50.58,   weight: 5,  jitterRadiusDeg: 0.20 },
+    { name: 'Kuwait City',    lat: 29.38,  lon: 47.99,   weight: 5,  jitterRadiusDeg: 0.25 },
+    { name: 'Muscat',         lat: 23.59,  lon: 58.41,   weight: 4,  jitterRadiusDeg: 0.25 },
+    { name: 'Tel Aviv',       lat: 32.09,  lon: 34.82,   weight: 4,  jitterRadiusDeg: 0.25 },
+    { name: 'Istanbul',       lat: 41.01,  lon: 28.98,   weight: 5,  jitterRadiusDeg: 0.30 },
+    { name: 'Cairo',          lat: 30.04,  lon: 31.24,   weight: 4,  jitterRadiusDeg: 0.35 },
+    { name: 'Amman',          lat: 31.95,  lon: 35.93,   weight: 3,  jitterRadiusDeg: 0.30 },
+    { name: 'Beirut',         lat: 33.89,  lon: 35.51,   weight: 3,  jitterRadiusDeg: 0.25 },
   ],
 };
 
@@ -175,11 +175,20 @@ function spiralInDisc(
   const total = Math.max(1, totalInCity);
   const theta = indexInCity * GOLDEN_ANGLE;
   const r = Math.sqrt((indexInCity + 0.5) / total);
-  return [r * Math.cos(theta) * radiusDeg, r * Math.sin(theta) * radiusDeg];
+  const jLat = ((Math.sin(indexInCity * 12.9898) * 43758.5453) % 1 - 0.5) * 0.3 * radiusDeg;
+  const jLon = ((Math.sin(indexInCity * 78.233)  * 43758.5453) % 1 - 0.5) * 0.3 * radiusDeg;
+  return [r * Math.cos(theta) * radiusDeg + jLat, r * Math.sin(theta) * radiusDeg + jLon];
 }
 
-// Derive geo coordinates and city name. Deterministic, no RNG.
-function hubCoordinates(hub: string, indexInHub: number, totalInHub: number): { lat: number; lon: number; cityName: string } {
+// Derive geo coordinates AND the assigned city name. The cityName is the
+// canonical group key for the city-zoom aggregation layer (cityBlobLayer,
+// cityEdgeLayer, blobLabelLayer); without it those layers degenerate to one
+// "city" per firm.
+function hubCoordinates(
+  hub: string,
+  indexInHub: number,
+  totalInHub: number,
+): { lat: number; lon: number; cityName: string } {
   const cities = HUB_CITIES[hub] ?? HUB_CITIES['NYC'];
   const { city, indexInCity, totalInCity } = assignCity(hub, cities, indexInHub, totalInHub);
   const [dLat, dLon] = spiralInDisc(indexInCity, totalInCity, city.jitterRadiusDeg);
@@ -190,7 +199,7 @@ function hubCoordinates(hub: string, indexInHub: number, totalInHub: number): { 
 export function parseInitialSnapshot(json: {
   nodes: Array<{
     id: number;
-    name?: string;
+    name: string;
     is_hero_firm: boolean;
     hub: string;
     location: { lat: number; lon: number };
