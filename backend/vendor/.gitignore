@@ -1,0 +1,8 @@
+# Build artifacts from uSockets compilation
+*.o
+*.a
+*.so
+*.dylib
+
+# Build directories
+build/
