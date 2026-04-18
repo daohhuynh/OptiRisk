@@ -1,0 +1,169 @@
+#pragma once
+// ============================================================================
+// cascade_engine.hpp — Physics Loop Engine
+//
+// Wraps SIMD compute, CSR Graph, and CLOB engine into a deterministic
+// fixed-point cascade loop. Capped at 20 rounds to prevent infinity.
+//
+// Flow: (Shock) → CLOB slippage → Mark-to-market → Liquidation → (Contagion)
+// ============================================================================
+
+#include <cstdint>
+#include <array>
+#include <algorithm>
+
+#include "memory/csr_graph.hpp"
+#include "market/order_book.hpp"
+#include "compute/simd_engine.hpp"
+
+namespace optirisk::compute {
+
+inline constexpr uint32_t MAX_CASCADE_ROUNDS = 20;
+
+struct CascadeStats {
+    uint32_t rounds;
+    uint32_t total_defaults;
+    uint32_t total_liquidations;
+    double   total_slippage;
+    uint64_t compute_cycles;
+};
+
+// ── Fixed-Point Cascade Simulator ───────────────────────────────────────
+// Given an initial shock string from the LLM via WebSockets, this runs 
+// the cascade until equilibrium or MAX_ROUNDS is hit.
+__attribute__((always_inline))
+inline CascadeStats run_cascade_tick(
+    optirisk::market::CLOBEngine& clob,
+    optirisk::memory::CSRGraph& graph,
+    const optirisk::network::ShockPayload& shock
+) noexcept {
+    const uint64_t start_cycles = read_cycles();
+
+    CascadeStats stats{0, 0, 0, 0.0, 0};
+
+    // 1. Initial hit (Macro shock)
+    // Update CLOB books based on the initial shock payload
+    clob.books[0].apply_macro_shock(shock.equities_delta);
+    clob.books[1].apply_macro_shock(shock.real_estate_delta);
+    clob.books[2].apply_macro_shock(shock.crypto_delta);
+    clob.books[3].apply_macro_shock(shock.treasuries_delta);
+    clob.books[4].apply_macro_shock(shock.corp_bonds_delta);
+
+    bool newly_defaulted = true;
+    uint32_t current_round = 0;
+
+    // Buffer to hold newly defaulted nodes to liquidate next round.
+    // Zero allocation: stacked array exactly sized for the worst case.
+    std::array<uint32_t, optirisk::memory::MAX_NODES> liquidation_queue{};
+    uint32_t liquidations_queued = 0;
+
+    // 2. Cascade Loop
+    while (newly_defaulted && current_round < MAX_CASCADE_ROUNDS) {
+        newly_defaulted = false;
+
+        // Step A: Mark-to-Market (SIMD)
+        // Note: apply_shock_simd() here acts as a general delta-updater if we convert it.
+        // Wait, for step-wise cascade, we need prices, not deltas. 
+        // SIMD engine uses deltas. Let's calculate the fractional price drop for SIMD.
+        
+        optirisk::network::ShockPayload iteration_shock{};
+        // The delta is vs the original baseline before the cascade started.
+        // Wait, no. The exposures are in USD. The SIMD engine currently does:
+        //    exposure[i] *= (1.0 + delta).
+        // Since we are iterating, we must be careful not to keep multiplying the total.
+        // What we really need is to pass the current CLOB prices to a price-based 
+        // NAV re-calculator, or use deltas *since the last round*.
+        // Using deltas since the LAST round is much easier and fits existing SIMD.
+        
+        // Let's compute delta since last round (we will track last_round_prices)
+        double cur_eq = clob.books[0].last_price;
+        double cur_re = clob.books[1].last_price;
+        double cur_cr = clob.books[2].last_price;
+        double cur_tr = clob.books[3].last_price;
+        double cur_cb = clob.books[4].last_price;
+        
+        // If it's round 0, the deltas are the raw shock from the user payload.
+        // The user effectively gave us the new CLOB baseline.
+        if (current_round == 0) {
+            iteration_shock = shock;
+            // The SIMD engine will do exposure * (1+delta).
+        } else {
+            // For subsequent rounds, the CLOB slippage gives us a NEW delta.
+            // But wait, the standard SIMD loop already applied the initial shock.
+            // We need a specific SIMD re-evaluation based on current asset multipliers.
+            // Let's just use the absolute multipliers vs baseline.
+        }
+
+        // To make this perfectly fit, let's just use the SIMD engine's apply_shock_simd.
+        // apply_shock_simd updates risk and defaults, returning new defaults count.
+        auto tick_result = apply_shock_simd(graph, (current_round == 0) ? shock : iteration_shock);
+        
+        stats.total_defaults += tick_result.cascade.defaults_triggered;
+
+        // Collect newly defaulted nodes queue
+        for (uint32_t i = 0; i < graph.num_nodes; ++i) {
+            // we need a strict state machine: Healthy(0) -> Defaulted(1) -> Liquidated(2)
+            if (graph.nodes.is_defaulted[i] == 1) {
+                liquidation_queue[liquidations_queued++] = i;
+                graph.nodes.is_defaulted[i] = 2; // Mark as queued for liquidation
+            }
+        }
+
+        if (liquidations_queued > 0) {
+            newly_defaulted = true;
+            
+            // Step B: Liquidate
+            for (uint32_t q = 0; q < liquidations_queued; ++q) {
+                uint32_t target_node = liquidation_queue[q];
+                
+                // For each asset class, convert USD exposure to units, sell on CLOB
+                // Use original baseline to convert to units:
+                
+                for (uint8_t a = 0; a < 5; ++a) {
+                    double exposure_usd = 0.0;
+                    if (a == 0) exposure_usd = graph.nodes.equities_exposure[target_node];
+                    else if (a == 1) exposure_usd = graph.nodes.real_estate_exposure[target_node];
+                    else if (a == 2) exposure_usd = graph.nodes.crypto_exposure[target_node];
+                    else if (a == 3) exposure_usd = graph.nodes.treasuries_exposure[target_node];
+                    else if (a == 4) exposure_usd = graph.nodes.corp_bonds_exposure[target_node];
+
+                    if (exposure_usd > 1.0) { // arbitrary tiny cutoff
+                        double baseline = clob.books[a].original_baseline;
+                        double units = exposure_usd / baseline;
+                        
+                        auto fill = clob.books[a].market_sell(units);
+                        stats.total_slippage += fill.slippage_pct;
+                        
+                        // Exposure is now seized.
+                        if (a == 0) graph.nodes.equities_exposure[target_node] = 0;
+                        else if (a == 1) graph.nodes.real_estate_exposure[target_node] = 0;
+                        else if (a == 2) graph.nodes.crypto_exposure[target_node] = 0;
+                        else if (a == 3) graph.nodes.treasuries_exposure[target_node] = 0;
+                        else if (a == 4) graph.nodes.corp_bonds_exposure[target_node] = 0;
+                    }
+                }
+                stats.total_liquidations++;
+            }
+            
+            // Generate the iteration shock for the next round based on price drops
+            // The iteration shock represents the delta from the start of THIS ROUND.
+            iteration_shock.equities_delta = (clob.books[0].last_price - cur_eq) / cur_eq;
+            iteration_shock.real_estate_delta = (clob.books[1].last_price - cur_re) / cur_re;
+            iteration_shock.crypto_delta = (clob.books[2].last_price - cur_cr) / cur_cr;
+            iteration_shock.treasuries_delta = (clob.books[3].last_price - cur_tr) / cur_tr;
+            iteration_shock.corp_bonds_delta = (clob.books[4].last_price - cur_cb) / cur_cb;
+
+            liquidations_queued = 0;
+        }
+
+        current_round++;
+    }
+
+    stats.rounds = current_round;
+    const uint64_t end_cycles = read_cycles();
+    stats.compute_cycles = (end_cycles > start_cycles) ? (end_cycles - start_cycles) : 0;
+
+    return stats;
+}
+
+} // namespace optirisk::compute

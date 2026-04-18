@@ -196,6 +196,19 @@ public:
         }
     }
 
+    // ── Broadcast a VaRReport to all connected clients ────────────
+    void broadcast_var(const VaRReport& report) {
+        struct { MessageHeader hdr; VaRReport payload; } __attribute__((packed)) buf;
+        buf.hdr.msg_type = MsgType::VaRReport;
+        buf.payload = report;
+
+        if (app_) [[likely]] {
+            app_->publish("tick",
+                         std::string_view(reinterpret_cast<const char*>(&buf), sizeof(buf)),
+                         uWS::BINARY);
+        }
+    }
+
     // ── Graceful shutdown (called from signal handler thread) ─────
     void shutdown() {
         if (listen_socket_) {

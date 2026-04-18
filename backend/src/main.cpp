@@ -22,7 +22,14 @@
 #include "memory/csr_graph.hpp"
 #include "concurrency/disruptor.hpp"
 #include "network/wire_protocol.hpp"
+#include "network/ws_listener.hpp"
+#include "memory/csr_graph.hpp"
+#include "market/order_book.hpp"
 #include "compute/simd_engine.hpp"
+#include "compute/cascade_engine.hpp"
+#include "compute/monte_carlo.hpp"
+
+uint32_t HERO_FIRM_ID = 0;
 
 // ── Global Shutdown Flag ───────────────────────────────────────────
 static std::atomic<bool> g_running{true};
@@ -31,60 +38,29 @@ static void signal_handler(int) {
     g_running.store(false, std::memory_order_relaxed);
 }
 
-// ── Thread 1: Network (Shock Ingestion) ────────────────────────────
+// ── Thread 1: Network (WsListener) ─────────────────────────────────
 //
-// Simulates receiving ShockPayloads from WebSocket clients.
-// In production, this would be driven by ws_listener.hpp callbacks.
-// Writes directly into shock_ring slots (zero-copy).
+// Blocks on uWS event loop. Parses incoming binary shocks, and writes 
+// them into shock_ring. 
 //
 static void network_thread(optirisk::concurrency::DisruptorEngine& engine,
-                           uint32_t num_nodes) {
-    std::mt19937 rng(42);  // Fixed seed for reproducibility
-    std::uniform_int_distribution<uint32_t> node_dist(0, num_nodes - 1);
-    std::uniform_int_distribution<uint32_t> type_dist(0, 4);
-    std::uniform_real_distribution<double>  delta_dist(-0.10, 0.05);
-
-    while (g_running.load(std::memory_order_relaxed)) [[likely]] {
-        const auto now = std::chrono::steady_clock::now().time_since_epoch();
-        const auto ns  = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
-
-        // Claim a slot (back-pressure: spins if Compute hasn't caught up)
-        auto seq = engine.shock_ring.claim(engine.compute_cursor, g_running);
-        if (seq == UINT64_MAX) [[unlikely]] break;  // Shutdown during back-pressure
-        auto& shock = engine.shock_ring.get(seq);
-
-        shock.target_node_id    = node_dist(rng);
-        shock.shock_type        = type_dist(rng);
-        shock.equities_delta    = delta_dist(rng);
-        shock.real_estate_delta = delta_dist(rng) * 0.5;
-        shock.crypto_delta      = delta_dist(rng) * 2.0;
-        shock.treasuries_delta  = delta_dist(rng) * 0.3;
-        shock.corp_bonds_delta  = delta_dist(rng) * 0.4;
-        shock.timestamp_ns      = static_cast<uint64_t>(ns);
-
-        engine.shock_ring.publish(seq);
-
-        engine.network_cursor.value.store(seq + 1, std::memory_order_release);
-        ++engine.network_count;
-
-        // ~10,000 events/sec simulated throughput
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
+                           optirisk::network::WsListener& listener) {
+    (void)engine; // WsListener pushes to engine via the on_shock callback
+    listener.run(); // Blocks until shutdown
 }
 
-// ── Thread 2: Compute (Risk Cascade Engine) ────────────────────────
+// ── Thread 2: Compute (Risk Cascade & VaR Engine) ──────────────────
 //
-// Reads ShockPayloads from shock_ring, applies deltas to the CSR graph,
-// runs cascade detection (BFS over CSR edges), and writes TickDeltas
-// into tick_ring.
+// Reads ShockPayloads from shock_ring, runs the deep Cascade 
+// physics loop involving the CLOB, then broadcasts.
 //
 static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
-                           optirisk::memory::CSRGraph& graph) {
+                           optirisk::memory::CSRGraph& graph,
+                           optirisk::market::CLOBEngine& clob) {
     uint64_t read_seq = 0;
     uint32_t tick_counter = 0;
 
     while (g_running.load(std::memory_order_relaxed)) [[likely]] {
-        // Spin until Network has published a new ShockPayload
         if (!engine.shock_ring.available(read_seq)) [[unlikely]] {
             #if defined(__x86_64__) || defined(_M_X64)
                 asm volatile("pause" ::: "memory");
@@ -96,36 +72,34 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
 
         const auto& shock = engine.shock_ring.get(read_seq);
 
-        // ── SIMD Compute Kernel (with cycle telemetry) ────────────
-        // apply_shock_simd handles all 3 phases vectorized:
-        //   Phase 1: FMA exposure update  (4 nodes/cycle)
-        //   Phase 2: ILP NAV recompute    (4 nodes/cycle)
-        //   Phase 3: Cascade BFS          (scalar, prefetched)
-        // Returns TickResult with compute_cycles stamped by rdtsc/cntvct.
-        auto result = optirisk::compute::apply_shock_simd(graph, shock);
+        // 1. VaR Monte Carlo (for the Hero firm)
+        auto var_result = optirisk::compute::run_monte_carlo_var(graph, shock);
 
-        // ── Build TickDelta and publish ───────────────────────────
-        // For market-wide shocks, we publish a summary TickDelta
-        // representing the first/most-impacted node.
+        // Print VaR for monitoring (production would route this via a dedicated queue)
+        if (tick_counter % 100 == 0) {
+            std::printf("[var] Node %u | Expected Loss: $%.2f | P95 VaR: $%.2f\n",
+                        HERO_FIRM_ID, var_result.expected[HERO_FIRM_ID], var_result.var_95[HERO_FIRM_ID]);
+        }
+
+        // 2. Cascade Physics Loop 
+        auto stats = optirisk::compute::run_cascade_tick(clob, graph, shock);
+
+        // Publish TickDelta for Hero Firm as summary (and potentially all defaults in a real setup)
         auto tick_seq = engine.tick_ring.claim(engine.broadcast_cursor, g_running);
         if (tick_seq == UINT64_MAX) [[unlikely]] break;
         auto& tick = engine.tick_ring.get(tick_seq);
 
-        const uint32_t nid = shock.target_node_id < graph.num_nodes
-                           ? shock.target_node_id : 0;
-
-        tick.node_id        = nid;
-        tick.risk_score     = graph.nodes.risk_score[nid];
-        tick.nav            = graph.nodes.nav[nid];
-        tick.exposure_total = graph.nodes.total_assets[nid];
-        tick.delta_nav      = 0.0;  // TODO: store per-node delta_nav
+        tick.node_id        = HERO_FIRM_ID;
+        tick.risk_score     = graph.nodes.risk_score[HERO_FIRM_ID];
+        tick.nav            = graph.nodes.nav[HERO_FIRM_ID];
+        tick.exposure_total = graph.nodes.total_assets[HERO_FIRM_ID];
+        tick.delta_nav      = 0.0;
         tick.delta_exposure = 0.0;
-        tick.is_defaulted   = graph.nodes.is_defaulted[nid];
-        tick.hub_id         = static_cast<uint8_t>(graph.nodes.hub_id[nid]);
-        tick.cascade_depth  = static_cast<uint8_t>(
-                                std::min(result.cascade.defaults_triggered, 255u));
+        tick.is_defaulted   = graph.nodes.is_defaulted[HERO_FIRM_ID];
+        tick.hub_id         = static_cast<uint8_t>(graph.nodes.hub_id[HERO_FIRM_ID]);
+        tick.cascade_depth  = static_cast<uint8_t>(std::min(stats.total_defaults, 255u));
         tick.tick_seq       = tick_counter++;
-        tick.compute_cycles = result.compute_cycles;  // <── rdtsc/cntvct delta
+        tick.compute_cycles = stats.compute_cycles;  // From the cascade engine
 
         engine.tick_ring.publish(tick_seq);
 
@@ -136,12 +110,8 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
 }
 
 // ── Thread 3: Broadcast (Binary Publisher) ─────────────────────────
-//
-// Reads TickDeltas from tick_ring and broadcasts them.
-// In production, this calls WsListener::broadcast_tick().
-// For now, periodic throughput reporting to stdout.
-//
-static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine) {
+static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine,
+                             optirisk::network::WsListener& listener) {
     uint64_t read_seq = 0;
     uint64_t last_report_seq = 0;
     auto last_report = std::chrono::steady_clock::now();
@@ -158,8 +128,9 @@ static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine) {
 
         const auto& tick = engine.tick_ring.get(read_seq);
 
-        // TODO: serialize TickDelta → binary frame → WebSocket broadcast
-        // For now, periodic throughput report
+        // Binary WebSocket broadcast
+        listener.broadcast_tick(tick);
+
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_report);
         if (elapsed.count() >= 5) [[unlikely]] {
@@ -228,11 +199,10 @@ static void build_test_graph(optirisk::memory::CSRGraph& graph, uint32_t num_nod
         graph.nodes.sector_id[u]     = u % 10;
         graph.nodes.latitude[u]      = lat_dist(rng);
         graph.nodes.longitude[u]     = lon_dist(rng);
-        graph.nodes.hub_id[u]        = static_cast<optirisk::memory::HubId>(u % 5);
         graph.nodes.is_hero_firm[u]  = 0;
     }
-    // Mark the largest firm as the hero
-    graph.nodes.is_hero_firm[0] = 1;
+    // Mark the randomly selected node as the hero
+    graph.nodes.is_hero_firm[HERO_FIRM_ID] = 1;
 
     // Build edges: ~8 per node average
     constexpr uint32_t EDGES_PER_NODE = 8;
@@ -274,20 +244,39 @@ int main() {
 
     // Build the counterparty graph (one-time heap-free init)
     static optirisk::memory::CSRGraph graph;  // static → .bss, zero-initialized
+    HERO_FIRM_ID = 42;  // Setup configurable hero firm dynamically.
     build_test_graph(graph, NUM_NODES);
     std::printf("[init] Graph built: %u nodes, %u edges\n", graph.num_nodes, graph.num_edges);
+
+    // Initialize CLOB
+    static optirisk::market::CLOBEngine clob;
+    optirisk::market::init_clob(clob);
+    std::printf("[init] CLOB Engine armed with realistic depth\n");
 
     // Create disruptor engine (static → .bss)
     static optirisk::concurrency::DisruptorEngine engine{};
     std::printf("[init] DisruptorEngine: %zu KB total ring memory\n",
                 (sizeof(engine.shock_ring) + sizeof(engine.tick_ring)) / 1024);
 
-    // Launch pipeline threads
-    std::thread t1(network_thread,   std::ref(engine), NUM_NODES);
-    std::thread t2(compute_thread,   std::ref(engine), std::ref(graph));
-    std::thread t3(broadcast_thread, std::ref(engine));
+    // WsListener parsing callback
+    auto on_shock = [](const optirisk::network::ShockPayload& shock) {
+        auto seq = engine.shock_ring.claim(engine.compute_cursor, g_running);
+        if (seq != UINT64_MAX) {
+            engine.shock_ring.get(seq) = shock;
+            engine.shock_ring.publish(seq);
+            engine.network_cursor.value.store(seq + 1, std::memory_order_release);
+            ++engine.network_count;
+        }
+    };
+    
+    optirisk::network::WsListener listener(8080, std::move(on_shock));
 
-    std::printf("[main] Pipeline running. Press Ctrl+C to stop.\n\n");
+    // Launch pipeline threads
+    std::thread t1(network_thread,   std::ref(engine), std::ref(listener));
+    std::thread t2(compute_thread,   std::ref(engine), std::ref(graph), std::ref(clob));
+    std::thread t3(broadcast_thread, std::ref(engine), std::ref(listener));
+
+    std::printf("[main] Pipeline running on WS port 8080. Press Ctrl+C to stop.\n\n");
 
     t1.join();
     t2.join();

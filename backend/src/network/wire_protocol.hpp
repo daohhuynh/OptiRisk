@@ -32,6 +32,9 @@ enum class MsgType : uint8_t {
     TickDelta      = 0x02,  // Backend → Frontend (per-tick delta)
     NodeSnapshot   = 0x03,  // Backend → Frontend (full node state)
     MarketAnchors  = 0x04,  // Backend → Frontend (handshake)
+    CreditRevoke   = 0x05,  // Frontend → Backend (Shield Action)
+    ShortOrder     = 0x06,  // Frontend → Backend (Sword Action)
+    VaRReport      = 0x07,  // Backend → Frontend (Monte Carlo results)
     Heartbeat      = 0xFE,  // Bidirectional keepalive
     Error          = 0xFF,  // Backend → Frontend (error notification)
 };
@@ -140,12 +143,43 @@ struct TickDelta {
     uint32_t tick_seq;
     uint64_t compute_cycles;   // CPU cycles spent in SIMD compute kernel (rdtsc/cntvct)
 };
+
+// ── CreditRevoke (16 bytes) ───────────────────────────────────────
+// The Shield mechanic: a player revokes credit to an infectious node.
+struct CreditRevoke {
+    uint32_t source_node;    // The node whose credit line to sever
+    uint32_t target_node;    // The creditor node
+    uint64_t timestamp_ns;
+};
+
+// ── ShortOrder (24 bytes) ─────────────────────────────────────────
+// The Sword mechanic: a player shorts an asset inside a dying node.
+struct ShortOrder {
+    uint32_t target_node;
+    uint8_t  asset_class;    // AssetClass enum (0-4)
+    uint8_t  _pad[3];
+    double   quantity;
+    uint64_t timestamp_ns;
+};
+
+// ── VaRReport (16 bytes) ──────────────────────────────────────────
+// Sent after a Monte Carlo burst: gives the P95 VaR risk for a node.
+struct VaRReport {
+    uint32_t target_node;
+    uint32_t paths_run;
+    double   var_95;         // USD worst-case drop at 95% confidence
+};
+
 #pragma pack(pop)
 
 static_assert(sizeof(TickDelta) == 56,
               "TickDelta must be exactly 56 bytes");
 static_assert(std::is_trivially_copyable_v<TickDelta>,
               "TickDelta must be trivially copyable for memcpy");
+
+static_assert(sizeof(CreditRevoke) == 16, "CreditRevoke must be exactly 16 bytes");
+static_assert(sizeof(ShortOrder) == 24, "ShortOrder must be exactly 24 bytes");
+static_assert(sizeof(VaRReport) == 16, "VaRReport must be exactly 16 bytes");
 
 // ============================================================================
 // Serialization Helpers

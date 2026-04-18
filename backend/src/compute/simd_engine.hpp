@@ -340,9 +340,10 @@ inline CascadeResult run_cascade(CSRGraph& graph,
         }
 
         // ── Default Detection ─────────────────────────────────────
-        if (graph.nodes.risk_score[nid] > DEFAULT_THRESH &&
+        if ((graph.nodes.risk_score[nid] > DEFAULT_THRESH || curr < 0.0) &&
             graph.nodes.is_defaulted[nid] == 0) [[unlikely]] {
             graph.nodes.is_defaulted[nid] = 1;
+            graph.nodes.risk_score[nid] = 1.0f; // Force risk score to 100%
             ++result.defaults_triggered;
 
             // ── CSR Neighbor Propagation ──────────────────────────
