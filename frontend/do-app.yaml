@@ -1,0 +1,44 @@
+# ============================================================================
+# DigitalOcean App Platform Specification
+# ============================================================================
+name: optirisk-frontend
+region: nyc
+services:
+- name: web
+  github:
+    branch: main
+    repo: daohhuynh/OptiRisk
+    deploy_on_push: true
+  
+  # Monorepo configuration:
+  source_dir: frontend
+  
+  # Next.js standard scripts from package.json
+  build_command: npm run build
+  run_command: npm run start
+  
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  
+  # Port for Next.js (usually 8080 or 3000, DO handles mapping)
+  http_port: 3000
+
+  # Environment Configuration
+  envs:
+  - key: K2_API_KEY
+    scope: RUN_TIME
+    type: SECRET
+    value: ${K2_API_KEY}
+  
+  - key: NEXT_PUBLIC_WS_BACKEND_URL
+    # CRITICAL: Next.js needs this at BUILD_TIME to inject into the client bundle
+    scope: RUN_AND_BUILD_TIME
+    type: GENERAL
+    value: ${NEXT_PUBLIC_WS_BACKEND_URL}
+
+# Health Check
+health_check:
+  http_path: /
+  initial_delay_seconds: 10
+  period_seconds: 10

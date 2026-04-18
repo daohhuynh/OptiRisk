@@ -58,7 +58,7 @@ export async function POST(req: Request) {
             }
           }
         ],
-        tool_choice: 'auto', 
+        tool_choice: 'auto',
       })
     });
 
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     if (choice.message.tool_calls) {
       // Direct raw API responses map tool_calls a bit differently than the SDK wrapper sometimes
       const toolCall = choice.message.tool_calls.find((t: any) => t.function.name === 'trigger_market_shock');
-      
+
       if (toolCall) {
         const args = JSON.parse(toolCall.function.arguments) as {
           asset_class: keyof typeof ASSET_OFFSETS;
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
         // b. Pack the ShockPayload (56 bytes)
         // target_node_id (0xFFFFFFFF = broadcast to all)
         view.setUint32(4, 0xFFFFFFFF, true);
-        
+
         // shock_type (e.g., 0 = custom)
         view.setUint32(8, 0, true);
 
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
         if (!targetOffset) {
           return NextResponse.json({ error: 'Invalid asset class specified by K2' }, { status: 400 });
         }
-        
+
         // Write the delta as a Float64 (Little-Endian) at the exact requested offset
         view.setFloat64(targetOffset, args.delta_percentage, true);
 
