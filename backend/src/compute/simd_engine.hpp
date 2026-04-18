@@ -176,6 +176,7 @@ inline void apply_delta_to_array(double* __restrict__ arr,
 
 #else
     // ── Scalar Fallback ───────────────────────────────────────────
+    #pragma GCC unroll 4
     for (uint32_t i = 0; i < vec_end; i += SIMD_WIDTH) {
         arr[i]     *= (1.0 + delta);
         arr[i + 1] *= (1.0 + delta);

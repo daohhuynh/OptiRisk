@@ -127,6 +127,7 @@ inline VaRResult run_monte_carlo_var(
             alignas(32) double drops[4];
             _mm256_store_pd(drops, nav_drop);
 
+            #pragma GCC unroll 4
             for (int k=0; k<4; ++k) {
                 double x = drops[k];
                 double delta = x - mean[i+k];
@@ -136,6 +137,7 @@ inline VaRResult run_monte_carlo_var(
             }
         }
 #else
+        #pragma GCC unroll 4
         for (uint32_t i = 0; i < count; ++i) {
             double total = (nodes.equities_exposure[i] * eq_d)
                          + (nodes.real_estate_exposure[i] * re_d)
@@ -156,6 +158,7 @@ inline VaRResult run_monte_carlo_var(
 
     // Compute P95 VaR using analytical normal approximation
     // VaR(95%) = Mean Drop + 1.645 * StdDev
+    #pragma GCC unroll 8
     for (uint32_t i = 0; i < count; ++i) {
         double variance = M2[i] / MC_PATHS;
         double std_dev = std::sqrt(variance);

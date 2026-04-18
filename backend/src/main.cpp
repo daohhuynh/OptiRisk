@@ -23,6 +23,7 @@
 #include "concurrency/disruptor.hpp"
 #include "network/wire_protocol.hpp"
 #include "network/ws_listener.hpp"
+#include "network/udp_publisher.hpp"
 #include "memory/csr_graph.hpp"
 #include "market/order_book.hpp"
 #include "compute/simd_engine.hpp"
@@ -56,7 +57,8 @@ static void network_thread(optirisk::concurrency::DisruptorEngine& engine,
 //
 static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
                            optirisk::memory::CSRGraph& graph,
-                           optirisk::market::CLOBEngine& clob) {
+                           optirisk::market::CLOBEngine& clob,
+                           optirisk::network::UdpPublisher& udp) {
     uint64_t read_seq = 0;
     uint32_t tick_counter = 0;
 
@@ -79,6 +81,12 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
         if (tick_counter % 100 == 0) {
             std::printf("[var] Node %u | Expected Loss: $%.2f | P95 VaR: $%.2f\n",
                         HERO_FIRM_ID, var_result.expected[HERO_FIRM_ID], var_result.var_95[HERO_FIRM_ID]);
+                        
+            optirisk::network::VaRReport var_rep{};
+            var_rep.target_node = HERO_FIRM_ID;
+            var_rep.paths_run = var_result.paths_run;
+            var_rep.var_95 = var_result.var_95[HERO_FIRM_ID];
+            udp.broadcast_var(var_rep); // Blast UDP directly from compute loop
         }
 
         // 2. Cascade Physics Loop 
@@ -111,7 +119,8 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
 
 // ── Thread 3: Broadcast (Binary Publisher) ─────────────────────────
 static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine,
-                             optirisk::network::WsListener& listener) {
+                             optirisk::network::WsListener& listener,
+                             optirisk::network::UdpPublisher& udp) {
     uint64_t read_seq = 0;
     uint64_t last_report_seq = 0;
     auto last_report = std::chrono::steady_clock::now();
@@ -128,8 +137,11 @@ static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine,
 
         const auto& tick = engine.tick_ring.get(read_seq);
 
-        // Binary WebSocket broadcast
+        // Binary WebSocket broadcast (TCP OUCH)
         listener.broadcast_tick(tick);
+        
+        // UDP Multicast broadcast (UDP ITCH)
+        udp.broadcast_tick(tick);
 
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_report);
@@ -162,69 +174,49 @@ static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine,
     }
 }
 
-// ── Build a synthetic test graph ───────────────────────────────────
-static void build_test_graph(optirisk::memory::CSRGraph& graph, uint32_t num_nodes) {
+// ── Load the QR Memory Binary ─────────────────────────────────────────
+static void load_market_binary(optirisk::memory::CSRGraph& graph) {
     graph.clear();
-    graph.set_node_count(num_nodes);
 
-    // Build a random sparse graph matching generate_data.py's distribution:
-    //   - Pareto(α=1.16) total assets × $100M baseline
-    //   - Dirichlet(4,2,0.5,3,2.5) portfolio allocation
-    //   - 2–12 preferential-attachment debt edges per node
-    std::mt19937 rng(123);
-    std::uniform_int_distribution<uint32_t> target_dist(0, num_nodes - 1);
-    std::uniform_real_distribution<double>  debt_frac_dist(0.02, 0.15);
-    std::uniform_real_distribution<float>   credit_dist(0.1f, 0.9f);
-    std::uniform_real_distribution<float>   risk_init_dist(0.05f, 0.20f);
-    std::uniform_real_distribution<float>   lat_dist(-90.0f, 90.0f);
-    std::uniform_real_distribution<float>   lon_dist(-180.0f, 180.0f);
-
-    // Synthetic Pareto-like total assets (simplified for test)
-    constexpr double ASSET_BASELINE = 100'000'000.0;  // $100M
-    for (uint32_t u = 0; u < num_nodes; ++u) {
-        // Approximate Pareto: exponential of uniform gives heavy tail
-        double pareto = (1.0 + static_cast<double>(rng() % 1000) / 100.0) * ASSET_BASELINE;
-        graph.nodes.total_assets[u] = pareto;
-
-        // Simplified Dirichlet → uniform splits (real loader will use actual weights)
-        double fifth = pareto / 5.0;
-        graph.nodes.equities_exposure[u]    = fifth * 1.6;   // ~32%
-        graph.nodes.real_estate_exposure[u] = fifth * 0.8;   // ~16%
-        graph.nodes.crypto_exposure[u]      = fifth * 0.2;   // ~4%
-        graph.nodes.treasuries_exposure[u]  = fifth * 1.2;   // ~24%
-        graph.nodes.corp_bonds_exposure[u]  = fifth * 1.2;   // ~24%
-
-        graph.nodes.risk_score[u]    = risk_init_dist(rng);
-        graph.nodes.credit_rating[u] = credit_dist(rng);
-        graph.nodes.sector_id[u]     = u % 10;
-        graph.nodes.latitude[u]      = lat_dist(rng);
-        graph.nodes.longitude[u]     = lon_dist(rng);
-        graph.nodes.is_hero_firm[u]  = 0;
+    FILE* fp = std::fopen("../optirisk_memory.bin", "rb");
+    if (!fp) {
+        std::fprintf(stderr, "FATAL: Could not open ../optirisk_memory.bin. Run python scripts/infer_network.py first.\n");
+        std::exit(1);
     }
-    // Mark the randomly selected node as the hero
-    graph.nodes.is_hero_firm[HERO_FIRM_ID] = 1;
-
-    // Build edges: ~8 per node average
-    constexpr uint32_t EDGES_PER_NODE = 8;
-    uint32_t edge_idx = 0;
-    graph.edges.row_ptr[0] = 0;
-
-    for (uint32_t u = 0; u < num_nodes; ++u) {
-        for (uint32_t e = 0; e < EDGES_PER_NODE; ++e) {
-            uint32_t target = target_dist(rng);
-            if (target == u) target = (target + 1) % num_nodes; // No self-loops
-            double debt = graph.nodes.total_assets[u] * debt_frac_dist(rng);
-            graph.add_edge(edge_idx, target, debt);
-            graph.nodes.liabilities[u] += debt;
-            ++edge_idx;
-        }
-        graph.edges.row_ptr[u + 1] = edge_idx;
-    }
-
-    // Finalize NAV = total_assets − liabilities
-    for (uint32_t u = 0; u < num_nodes; ++u) {
-        graph.nodes.nav[u] = graph.nodes.total_assets[u] - graph.nodes.liabilities[u];
-    }
+    
+    // We expect exactly 500 nodes based on our data pipeline
+    constexpr size_t N = optirisk::memory::MAX_NODES;
+    constexpr size_t E = optirisk::memory::MAX_EDGES;
+    
+    // Read NodeData arrays directly bypassing struct padding
+    std::fread(graph.nodes.risk_score.data(), sizeof(float), N, fp);
+    std::fread(graph.nodes.is_defaulted.data(), sizeof(uint8_t), N, fp);
+    std::fread(graph.nodes.is_hero_firm.data(), sizeof(uint8_t), N, fp);
+    std::fread(graph.nodes.equities_exposure.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.real_estate_exposure.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.crypto_exposure.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.treasuries_exposure.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.corp_bonds_exposure.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.total_assets.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.liabilities.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.nav.data(), sizeof(double), N, fp);
+    std::fread(graph.nodes.credit_rating.data(), sizeof(float), N, fp);
+    std::fread(graph.nodes.sector_id.data(), sizeof(uint32_t), N, fp);
+    std::fread(graph.nodes.latitude.data(), sizeof(float), N, fp);
+    std::fread(graph.nodes.longitude.data(), sizeof(float), N, fp);
+    std::fread(graph.nodes.hub_id.data(), sizeof(uint8_t), N, fp);
+    
+    // Read CSREdges arrays
+    std::fread(graph.edges.row_ptr.data(), sizeof(uint32_t), N + 1, fp);
+    std::fread(graph.edges.col_idx.data(), sizeof(uint32_t), E, fp);
+    std::fread(graph.edges.weight.data(), sizeof(double), E, fp);
+    
+    // Trailer
+    std::fread(&graph.num_nodes, sizeof(uint32_t), 1, fp);
+    std::fread(&graph.num_edges, sizeof(uint32_t), 1, fp);
+    std::fread(&HERO_FIRM_ID, sizeof(uint32_t), 1, fp);
+    
+    std::fclose(fp);
 }
 
 // ── Main ───────────────────────────────────────────────────────────
@@ -244,9 +236,9 @@ int main() {
 
     // Build the counterparty graph (one-time heap-free init)
     static optirisk::memory::CSRGraph graph;  // static → .bss, zero-initialized
-    HERO_FIRM_ID = 42;  // Setup configurable hero firm dynamically.
-    build_test_graph(graph, NUM_NODES);
-    std::printf("[init] Graph built: %u nodes, %u edges\n", graph.num_nodes, graph.num_edges);
+    load_market_binary(graph);
+    std::printf("[init] Graph loaded: %u nodes, %u edges\n", graph.num_nodes, graph.num_edges);
+    std::printf("[init] Hero Firm ID dynamically mapped to: %u\n", HERO_FIRM_ID);
 
     // Initialize CLOB
     static optirisk::market::CLOBEngine clob;
@@ -257,6 +249,9 @@ int main() {
     static optirisk::concurrency::DisruptorEngine engine{};
     std::printf("[init] DisruptorEngine: %zu KB total ring memory\n",
                 (sizeof(engine.shock_ring) + sizeof(engine.tick_ring)) / 1024);
+
+    // Initialize UDP Multicast Publisher
+    static optirisk::network::UdpPublisher udp{"239.255.0.1", 9090};
 
     // WsListener parsing callback
     auto on_shock = [](const optirisk::network::ShockPayload& shock) {
@@ -273,8 +268,8 @@ int main() {
 
     // Launch pipeline threads
     std::thread t1(network_thread,   std::ref(engine), std::ref(listener));
-    std::thread t2(compute_thread,   std::ref(engine), std::ref(graph), std::ref(clob));
-    std::thread t3(broadcast_thread, std::ref(engine), std::ref(listener));
+    std::thread t2(compute_thread,   std::ref(engine), std::ref(graph), std::ref(clob), std::ref(udp));
+    std::thread t3(broadcast_thread, std::ref(engine), std::ref(listener), std::ref(udp));
 
     std::printf("[main] Pipeline running on WS port 8080. Press Ctrl+C to stop.\n\n");
 
