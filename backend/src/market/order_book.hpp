@@ -21,11 +21,13 @@
 
 #include "network/protocol.hpp"
 #include <cmath>
+#include <atomic>
 
 namespace optirisk::market {
 
 inline constexpr uint32_t NUM_ASSETS = 5;
 inline constexpr uint32_t BOOK_MAX_DEPTH = 256;
+inline constexpr uint32_t BBO_BUFFER_SIZE = 2048;
 
 enum class AssetClass : uint8_t {
     Equities   = 0,
@@ -95,7 +97,7 @@ struct alignas(64) OrderBook {
             
             level.depth -= fill;
             
-            if (bbo_buffer && bbo_count && *bbo_count < CLOBEngine::BBO_BUFFER_SIZE) {
+            if (bbo_buffer && bbo_count && *bbo_count < BBO_BUFFER_SIZE) {
                 bbo_buffer[*bbo_count] = { asset_id, 0 /*Bid*/, static_cast<float>(level.price), static_cast<float>(level.depth), {0} };
                 (*bbo_count)++;
             }
@@ -148,7 +150,7 @@ struct alignas(64) OrderBook {
             
             level.depth -= fill;
             
-            if (bbo_buffer && bbo_count && *bbo_count < CLOBEngine::BBO_BUFFER_SIZE) {
+            if (bbo_buffer && bbo_count && *bbo_count < BBO_BUFFER_SIZE) {
                 bbo_buffer[*bbo_count] = { asset_id, 1 /*Ask*/, static_cast<float>(level.price), static_cast<float>(level.depth), {0} };
                 (*bbo_count)++;
             }
@@ -210,10 +212,7 @@ struct alignas(64) OrderBook {
 };
 
 // ── Global CLOB Context ───────────────────────────────────────────────────
-#include <atomic>
-
 struct alignas(64) CLOBEngine {
-    static constexpr uint32_t BBO_BUFFER_SIZE = 2048;
     std::array<OrderBook, NUM_ASSETS> books;
     
     // ── Zero-Allocation Ping-Pong BBO Buffer ──────────────────────────────────

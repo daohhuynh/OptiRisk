@@ -202,7 +202,7 @@ inline void apply_delta_to_array(double* __restrict__ arr,
 //
 
 __attribute__((always_inline))
-inline void recompute_nav_simd(NodeData& nodes, const uint32_t count) noexcept {
+inline void recompute_nav_simd(optirisk::memory::NodeData& nodes, const uint32_t count) noexcept {
     const uint32_t vec_end = count & ~(SIMD_WIDTH - 1);
 
 #if defined(OPTIRISK_AVX2)
