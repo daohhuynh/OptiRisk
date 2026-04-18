@@ -2,7 +2,21 @@
 
 ## Project Identity
 OptiRisk is a high-frequency counterparty risk simulator built for a 30-hour hackathon. It consists of a bare-metal C++23 backend and a Next.js/WebGL frontend.
+---
+## System Overview
 
+The system has two runtime modes:
+
+1. **Pre-shock mode**
+   - world state is mostly static
+   - graph topology and map placement are stable
+
+2. **Simulation mode**
+   - a user-triggered shock starts a contagion cascade
+   - the backend updates risk state at fast tick intervals
+   - the frontend renders and explains the evolving cascade
+
+The frontend does not own the simulation physics. The backend does.
 ---
 
 ## Backend Rules (STRICT — Zero Tolerance)
@@ -18,23 +32,30 @@ OptiRisk is a high-frequency counterparty risk simulator built for a 30-hour hac
 
 ## Frontend Rules
 
-1.  **Framework**: Next.js (App Router) with TypeScript.
-2.  **3D Rendering**: React Three Fiber (`@react-three/fiber`) and Drei (`@react-three/drei`). The primary visualization is a 3D risk topology rendered on a dark globe/grid.
-3.  **State Management**: Zustand for global state (risk graph data, connection status).
-4.  **Data Ingestion**: The frontend receives data over a WebSocket as raw `ArrayBuffer`. It MUST parse binary data directly (using `DataView` or typed arrays). Do NOT parse JSON from the backend.
-5.  **Styling**: Tailwind CSS. Dark mode is the default and only theme.
+1. **Framework**: Next.js (App Router) with TypeScript.
+2. **Rendering Stack**: MapLibre + deck.gl.
+3. **Visualization Model**: The primary UI is a dark, Obsidian-inspired, 3D-capable geo graph for contagion simulation.
+4. **State Management**: Zustand for global state.
+5. **Data Ingestion**: The frontend receives data over WebSocket as raw `ArrayBuffer`. It MUST parse binary data directly with `DataView` or typed arrays. Do NOT parse JSON from the backend.
+6. **Styling**: Tailwind CSS. Dark mode is the default and only theme.
+7. **UI Scope**: Desktop-first for V1.
+8. **Product Scope**: V1 prioritizes the graph and chat interface first, not a heavy analytics dashboard.
+9. **Node Types**: V1 supports banks, firms, and sectors.
+10. **Clustering**: Do not add clustering by default in V1 unless density becomes a blocker.
+11. **Simulation Model**: The graph may be mostly static before a shock, but the frontend must handle frequent simulation updates once contagion starts.
+12. **Abstraction Boundary**: The frontend should stay flexible about exact edge semantics until the economic model is finalized.
 
 ---
 
 ## Architecture Diagram (Mental Model)
-
+```text
+[Market Feed Sim] → [Disruptor Ring Buffer] → [CSR Graph Engine] → [Binary WebSocket] → [Next.js + MapLibre + deck.gl]
+   (Thread 1)           (Lock-Free)             (Thread 2)            (Thread 3)         (Browser)
 ```
-[Market Feed Sim] → [Disruptor Ring Buffer] → [CSR Graph Engine] → [Binary WebSocket] → [React Three Fiber Globe]
-   (Thread 1)           (Lock-Free)             (Thread 2)            (Thread 3)            (Browser)
-```
-
+---
 ## File Conventions
 - Backend headers: `.hpp` (no `.h`)
 - Backend source: `.cpp`
 - Frontend components: PascalCase `.tsx`
 - Frontend hooks: camelCase `use*.ts`
+- Frontend stores: `*Store.ts`
