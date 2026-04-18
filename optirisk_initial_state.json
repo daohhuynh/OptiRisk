@@ -9,6 +9,7 @@
   "nodes": [
     {
       "id": 0,
+      "name": "Bridgewater Star Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -28,6 +29,7 @@
     },
     {
       "id": 1,
+      "name": "AQR Tree L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -47,6 +49,7 @@
     },
     {
       "id": 2,
+      "name": "Red Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -66,6 +69,7 @@
     },
     {
       "id": 3,
+      "name": "Citadel Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -85,6 +89,7 @@
     },
     {
       "id": 4,
+      "name": "Silver Sky Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -104,6 +109,7 @@
     },
     {
       "id": 5,
+      "name": "Silver Fund",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -123,6 +129,7 @@
     },
     {
       "id": 6,
+      "name": "Apex Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -142,6 +149,7 @@
     },
     {
       "id": 7,
+      "name": "Sequoia Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -161,6 +169,7 @@
     },
     {
       "id": 8,
+      "name": "Cascade Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -180,6 +189,7 @@
     },
     {
       "id": 9,
+      "name": "Sequoia Valley Trading",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -199,6 +209,7 @@
     },
     {
       "id": 10,
+      "name": "Optima Ocean LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -218,6 +229,7 @@
     },
     {
       "id": 11,
+      "name": "Bridgewater LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -237,6 +249,7 @@
     },
     {
       "id": 12,
+      "name": "Stone Valley L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -256,6 +269,7 @@
     },
     {
       "id": 13,
+      "name": "Silver Star Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -275,6 +289,7 @@
     },
     {
       "id": 14,
+      "name": "Sequoia Star Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -294,6 +309,7 @@
     },
     {
       "id": 15,
+      "name": "Stone Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -313,6 +329,7 @@
     },
     {
       "id": 16,
+      "name": "AQR Sky Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -332,6 +349,7 @@
     },
     {
       "id": 17,
+      "name": "Cascade Coast Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -351,6 +369,7 @@
     },
     {
       "id": 18,
+      "name": "Sequoia Sky Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -370,6 +389,7 @@
     },
     {
       "id": 19,
+      "name": "Stone Star Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -389,6 +409,7 @@
     },
     {
       "id": 20,
+      "name": "Stone LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -408,6 +429,7 @@
     },
     {
       "id": 21,
+      "name": "AQR Coast Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -427,6 +449,7 @@
     },
     {
       "id": 22,
+      "name": "Vanguard Stone LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -446,6 +469,7 @@
     },
     {
       "id": 23,
+      "name": "Milestone Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -465,6 +489,7 @@
     },
     {
       "id": 24,
+      "name": "Bridgewater Point Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -484,6 +509,7 @@
     },
     {
       "id": 25,
+      "name": "Virtu Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -503,6 +529,7 @@
     },
     {
       "id": 26,
+      "name": "Jane Oak Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -522,6 +549,7 @@
     },
     {
       "id": 27,
+      "name": "Cascade LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -541,6 +569,7 @@
     },
     {
       "id": 28,
+      "name": "Bridgewater Pine Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -560,6 +589,7 @@
     },
     {
       "id": 29,
+      "name": "Apex Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -579,6 +609,7 @@
     },
     {
       "id": 30,
+      "name": "Optima Peak Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -598,6 +629,7 @@
     },
     {
       "id": 31,
+      "name": "Jane Ocean Trading",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -617,6 +649,7 @@
     },
     {
       "id": 32,
+      "name": "Apex Tree Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -636,6 +669,7 @@
     },
     {
       "id": 33,
+      "name": "Two Stone L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -655,6 +689,7 @@
     },
     {
       "id": 34,
+      "name": "Milestone Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -674,6 +709,7 @@
     },
     {
       "id": 35,
+      "name": "Blue Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -693,6 +729,7 @@
     },
     {
       "id": 36,
+      "name": "Optima Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -712,6 +749,7 @@
     },
     {
       "id": 37,
+      "name": "Citadel Tree Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -731,6 +769,7 @@
     },
     {
       "id": 38,
+      "name": "Red Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -750,6 +789,7 @@
     },
     {
       "id": 39,
+      "name": "Cascade Valley Fund",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -769,6 +809,7 @@
     },
     {
       "id": 40,
+      "name": "Quantum Pine Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -788,6 +829,7 @@
     },
     {
       "id": 41,
+      "name": "Virtu Holdings",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -807,6 +849,7 @@
     },
     {
       "id": 42,
+      "name": "Bridgewater Point LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -826,6 +869,7 @@
     },
     {
       "id": 43,
+      "name": "White Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -845,6 +889,7 @@
     },
     {
       "id": 44,
+      "name": "Bridgewater Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -864,6 +909,7 @@
     },
     {
       "id": 45,
+      "name": "Two Point Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -883,6 +929,7 @@
     },
     {
       "id": 46,
+      "name": "Cascade Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -902,6 +949,7 @@
     },
     {
       "id": 47,
+      "name": "Two Sky Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -921,6 +969,7 @@
     },
     {
       "id": 48,
+      "name": "White Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -940,6 +989,7 @@
     },
     {
       "id": 49,
+      "name": "Silver Ocean Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -959,6 +1009,7 @@
     },
     {
       "id": 50,
+      "name": "Blue Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -978,6 +1029,7 @@
     },
     {
       "id": 51,
+      "name": "Silver Tree Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -997,6 +1049,7 @@
     },
     {
       "id": 52,
+      "name": "Apex Sky Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1016,6 +1069,7 @@
     },
     {
       "id": 53,
+      "name": "Sequoia Sigma Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1035,6 +1089,7 @@
     },
     {
       "id": 54,
+      "name": "Citadel Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1054,6 +1109,7 @@
     },
     {
       "id": 55,
+      "name": "Blue Peak Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1073,6 +1129,7 @@
     },
     {
       "id": 56,
+      "name": "White Sigma Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1092,6 +1149,7 @@
     },
     {
       "id": 57,
+      "name": "Horizon Valley Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1111,6 +1169,7 @@
     },
     {
       "id": 58,
+      "name": "Quantum River Partners",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1130,6 +1189,7 @@
     },
     {
       "id": 59,
+      "name": "Citadel Trading",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1149,6 +1209,7 @@
     },
     {
       "id": 60,
+      "name": "Red Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1168,6 +1229,7 @@
     },
     {
       "id": 61,
+      "name": "White Peak Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1187,6 +1249,7 @@
     },
     {
       "id": 62,
+      "name": "Black Oak LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1206,6 +1269,7 @@
     },
     {
       "id": 63,
+      "name": "Black Sky L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1225,6 +1289,7 @@
     },
     {
       "id": 64,
+      "name": "Jane L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1244,6 +1309,7 @@
     },
     {
       "id": 65,
+      "name": "Horizon Pine Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1263,6 +1329,7 @@
     },
     {
       "id": 66,
+      "name": "Silver Sky Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1282,6 +1349,7 @@
     },
     {
       "id": 67,
+      "name": "Optima Tree LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1301,6 +1369,7 @@
     },
     {
       "id": 68,
+      "name": "Two Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1320,6 +1389,7 @@
     },
     {
       "id": 69,
+      "name": "White Peak Capital",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1339,6 +1409,7 @@
     },
     {
       "id": 70,
+      "name": "White Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1358,6 +1429,7 @@
     },
     {
       "id": 71,
+      "name": "Citadel Rock Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1377,6 +1449,7 @@
     },
     {
       "id": 72,
+      "name": "Horizon Trading",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1396,6 +1469,7 @@
     },
     {
       "id": 73,
+      "name": "Black Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1415,6 +1489,7 @@
     },
     {
       "id": 74,
+      "name": "Silver Coast LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1434,6 +1509,7 @@
     },
     {
       "id": 75,
+      "name": "Citadel Point Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1453,6 +1529,7 @@
     },
     {
       "id": 76,
+      "name": "Horizon Peak Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1472,6 +1549,7 @@
     },
     {
       "id": 77,
+      "name": "Jane Point Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1491,6 +1569,7 @@
     },
     {
       "id": 78,
+      "name": "Red Sigma Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1510,6 +1589,7 @@
     },
     {
       "id": 79,
+      "name": "Quantum Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1529,6 +1609,7 @@
     },
     {
       "id": 80,
+      "name": "AQR Street Fund",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1548,6 +1629,7 @@
     },
     {
       "id": 81,
+      "name": "Apex Point Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1567,6 +1649,7 @@
     },
     {
       "id": 82,
+      "name": "Horizon Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1586,6 +1669,7 @@
     },
     {
       "id": 83,
+      "name": "Blue Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1605,6 +1689,7 @@
     },
     {
       "id": 84,
+      "name": "Quantum LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1624,6 +1709,7 @@
     },
     {
       "id": 85,
+      "name": "Optima Point Fund",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1643,6 +1729,7 @@
     },
     {
       "id": 86,
+      "name": "Jane Rock Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1662,6 +1749,7 @@
     },
     {
       "id": 87,
+      "name": "Apex Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1681,6 +1769,7 @@
     },
     {
       "id": 88,
+      "name": "Cascade Stone Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1700,6 +1789,7 @@
     },
     {
       "id": 89,
+      "name": "AQR Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1719,6 +1809,7 @@
     },
     {
       "id": 90,
+      "name": "Vanguard Street Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1738,6 +1829,7 @@
     },
     {
       "id": 91,
+      "name": "Cascade Point Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1757,6 +1849,7 @@
     },
     {
       "id": 92,
+      "name": "Apex Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -1776,6 +1869,7 @@
     },
     {
       "id": 93,
+      "name": "Horizon Stone Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -1795,6 +1889,7 @@
     },
     {
       "id": 94,
+      "name": "Jane Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1814,6 +1909,7 @@
     },
     {
       "id": 95,
+      "name": "Milestone Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1833,6 +1929,7 @@
     },
     {
       "id": 96,
+      "name": "Citadel Point Asset Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -1852,6 +1949,7 @@
     },
     {
       "id": 97,
+      "name": "Stone Pine Trading",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1871,6 +1969,7 @@
     },
     {
       "id": 98,
+      "name": "Vanguard Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1890,6 +1989,7 @@
     },
     {
       "id": 99,
+      "name": "Red Star Group",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1909,6 +2009,7 @@
     },
     {
       "id": 100,
+      "name": "Blue Group",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1928,6 +2029,7 @@
     },
     {
       "id": 101,
+      "name": "Vanguard Fund",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1947,6 +2049,7 @@
     },
     {
       "id": 102,
+      "name": "Apex Pine Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -1966,6 +2069,7 @@
     },
     {
       "id": 103,
+      "name": "Bridgewater Partners",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -1985,6 +2089,7 @@
     },
     {
       "id": 104,
+      "name": "Vanguard Peak Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2004,6 +2109,7 @@
     },
     {
       "id": 105,
+      "name": "Horizon Pine L.P.",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2023,6 +2129,7 @@
     },
     {
       "id": 106,
+      "name": "Red Star Trading",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2042,6 +2149,7 @@
     },
     {
       "id": 107,
+      "name": "Optima Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2061,6 +2169,7 @@
     },
     {
       "id": 108,
+      "name": "Two Point L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2080,6 +2189,7 @@
     },
     {
       "id": 109,
+      "name": "Apex Sky Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2099,6 +2209,7 @@
     },
     {
       "id": 110,
+      "name": "Horizon Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2118,6 +2229,7 @@
     },
     {
       "id": 111,
+      "name": "Apex Tree Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2137,6 +2249,7 @@
     },
     {
       "id": 112,
+      "name": "Jane Trading",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2156,6 +2269,7 @@
     },
     {
       "id": 113,
+      "name": "Optima Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2175,6 +2289,7 @@
     },
     {
       "id": 114,
+      "name": "Vanguard Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2194,6 +2309,7 @@
     },
     {
       "id": 115,
+      "name": "Optima Stone L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2213,6 +2329,7 @@
     },
     {
       "id": 116,
+      "name": "Horizon Rock Capital",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2232,6 +2349,7 @@
     },
     {
       "id": 117,
+      "name": "Optima L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2251,6 +2369,7 @@
     },
     {
       "id": 118,
+      "name": "Optima Rock L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2270,6 +2389,7 @@
     },
     {
       "id": 119,
+      "name": "Red Point Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2289,6 +2409,7 @@
     },
     {
       "id": 120,
+      "name": "Optima Peak Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2308,6 +2429,7 @@
     },
     {
       "id": 121,
+      "name": "Silver Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2327,6 +2449,7 @@
     },
     {
       "id": 122,
+      "name": "White Street Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2346,6 +2469,7 @@
     },
     {
       "id": 123,
+      "name": "Apex River Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2365,6 +2489,7 @@
     },
     {
       "id": 124,
+      "name": "Optima Point Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2384,6 +2509,7 @@
     },
     {
       "id": 125,
+      "name": "AQR Pine Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2403,6 +2529,7 @@
     },
     {
       "id": 126,
+      "name": "Red Tree Capital",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2422,6 +2549,7 @@
     },
     {
       "id": 127,
+      "name": "AQR L.P.",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2441,6 +2569,7 @@
     },
     {
       "id": 128,
+      "name": "Silver Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2460,6 +2589,7 @@
     },
     {
       "id": 129,
+      "name": "Citadel Street Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2479,6 +2609,7 @@
     },
     {
       "id": 130,
+      "name": "Citadel Coast LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2498,6 +2629,7 @@
     },
     {
       "id": 131,
+      "name": "Citadel LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2517,6 +2649,7 @@
     },
     {
       "id": 132,
+      "name": "Jane Rock Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2536,6 +2669,7 @@
     },
     {
       "id": 133,
+      "name": "Blue Peak Holdings",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2555,6 +2689,7 @@
     },
     {
       "id": 134,
+      "name": "Optima Holdings",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2574,6 +2709,7 @@
     },
     {
       "id": 135,
+      "name": "Milestone River LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2593,6 +2729,7 @@
     },
     {
       "id": 136,
+      "name": "Blue Rock LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2612,6 +2749,7 @@
     },
     {
       "id": 137,
+      "name": "Milestone Point Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2631,6 +2769,7 @@
     },
     {
       "id": 138,
+      "name": "Sequoia River LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2650,6 +2789,7 @@
     },
     {
       "id": 139,
+      "name": "Bridgewater Star Partners",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2669,6 +2809,7 @@
     },
     {
       "id": 140,
+      "name": "Red Ocean Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2688,6 +2829,7 @@
     },
     {
       "id": 141,
+      "name": "Jane Rock Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2707,6 +2849,7 @@
     },
     {
       "id": 142,
+      "name": "Citadel Valley Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2726,6 +2869,7 @@
     },
     {
       "id": 143,
+      "name": "Milestone Stone Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2745,6 +2889,7 @@
     },
     {
       "id": 144,
+      "name": "Stone Ocean Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -2764,6 +2909,7 @@
     },
     {
       "id": 145,
+      "name": "Virtu Star LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2783,6 +2929,7 @@
     },
     {
       "id": 146,
+      "name": "Cascade Point Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2802,6 +2949,7 @@
     },
     {
       "id": 147,
+      "name": "Bridgewater Peak L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -2821,6 +2969,7 @@
     },
     {
       "id": 148,
+      "name": "Two Stone Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2840,6 +2989,7 @@
     },
     {
       "id": 149,
+      "name": "Optima Sigma Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2859,6 +3009,7 @@
     },
     {
       "id": 150,
+      "name": "AQR Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2878,6 +3029,7 @@
     },
     {
       "id": 151,
+      "name": "White Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2897,6 +3049,7 @@
     },
     {
       "id": 152,
+      "name": "Milestone Sigma Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2916,6 +3069,7 @@
     },
     {
       "id": 153,
+      "name": "Sequoia Oak L.P.",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -2935,6 +3089,7 @@
     },
     {
       "id": 154,
+      "name": "Red Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -2954,6 +3109,7 @@
     },
     {
       "id": 155,
+      "name": "Milestone L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2973,6 +3129,7 @@
     },
     {
       "id": 156,
+      "name": "White LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -2992,6 +3149,7 @@
     },
     {
       "id": 157,
+      "name": "Bridgewater Coast LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3011,6 +3169,7 @@
     },
     {
       "id": 158,
+      "name": "Blue Capital",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3030,6 +3189,7 @@
     },
     {
       "id": 159,
+      "name": "Quantum Stone Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3049,6 +3209,7 @@
     },
     {
       "id": 160,
+      "name": "Horizon Oak Fund",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3068,6 +3229,7 @@
     },
     {
       "id": 161,
+      "name": "Citadel Rock LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3087,6 +3249,7 @@
     },
     {
       "id": 162,
+      "name": "Black Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3106,6 +3269,7 @@
     },
     {
       "id": 163,
+      "name": "Stone Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3125,6 +3289,7 @@
     },
     {
       "id": 164,
+      "name": "Jane Valley Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3144,6 +3309,7 @@
     },
     {
       "id": 165,
+      "name": "Sequoia Peak Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3163,6 +3329,7 @@
     },
     {
       "id": 166,
+      "name": "Sequoia Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3182,6 +3349,7 @@
     },
     {
       "id": 167,
+      "name": "AQR Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3201,6 +3369,7 @@
     },
     {
       "id": 168,
+      "name": "AQR Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3220,6 +3389,7 @@
     },
     {
       "id": 169,
+      "name": "Optima Oak Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3239,6 +3409,7 @@
     },
     {
       "id": 170,
+      "name": "Blue Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3258,6 +3429,7 @@
     },
     {
       "id": 171,
+      "name": "White Coast Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3277,6 +3449,7 @@
     },
     {
       "id": 172,
+      "name": "Quantum Ocean LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3296,6 +3469,7 @@
     },
     {
       "id": 173,
+      "name": "Silver Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3315,6 +3489,7 @@
     },
     {
       "id": 174,
+      "name": "Milestone Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3334,6 +3509,7 @@
     },
     {
       "id": 175,
+      "name": "Apex Street Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3353,6 +3529,7 @@
     },
     {
       "id": 176,
+      "name": "Virtu Star LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3372,6 +3549,7 @@
     },
     {
       "id": 177,
+      "name": "Blue Street LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3391,6 +3569,7 @@
     },
     {
       "id": 178,
+      "name": "Jane Fund",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3410,6 +3589,7 @@
     },
     {
       "id": 179,
+      "name": "Horizon Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3429,6 +3609,7 @@
     },
     {
       "id": 180,
+      "name": "Optima Sigma Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3448,6 +3629,7 @@
     },
     {
       "id": 181,
+      "name": "Optima Stone L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3467,6 +3649,7 @@
     },
     {
       "id": 182,
+      "name": "Red LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3486,6 +3669,7 @@
     },
     {
       "id": 183,
+      "name": "Stone Partners",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3505,6 +3689,7 @@
     },
     {
       "id": 184,
+      "name": "Apex Street Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3524,6 +3709,7 @@
     },
     {
       "id": 185,
+      "name": "Bridgewater Street Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3543,6 +3729,7 @@
     },
     {
       "id": 186,
+      "name": "Jane Pine Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3562,6 +3749,7 @@
     },
     {
       "id": 187,
+      "name": "Sequoia Sky Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3581,6 +3769,7 @@
     },
     {
       "id": 188,
+      "name": "Blue Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3600,6 +3789,7 @@
     },
     {
       "id": 189,
+      "name": "Vanguard Sky Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3619,6 +3809,7 @@
     },
     {
       "id": 190,
+      "name": "Virtu Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3638,6 +3829,7 @@
     },
     {
       "id": 191,
+      "name": "Silver Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3657,6 +3849,7 @@
     },
     {
       "id": 192,
+      "name": "Black Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3676,6 +3869,7 @@
     },
     {
       "id": 193,
+      "name": "Red Rock LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3695,6 +3889,7 @@
     },
     {
       "id": 194,
+      "name": "Quantum Star Holdings",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3714,6 +3909,7 @@
     },
     {
       "id": 195,
+      "name": "Cascade Ocean Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3733,6 +3929,7 @@
     },
     {
       "id": 196,
+      "name": "Cascade Stone Capital",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -3752,6 +3949,7 @@
     },
     {
       "id": 197,
+      "name": "White Street Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -3771,6 +3969,7 @@
     },
     {
       "id": 198,
+      "name": "Silver Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3790,6 +3989,7 @@
     },
     {
       "id": 199,
+      "name": "Virtu Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3809,6 +4009,7 @@
     },
     {
       "id": 200,
+      "name": "Vanguard Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3828,6 +4029,7 @@
     },
     {
       "id": 201,
+      "name": "Horizon Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3847,6 +4049,7 @@
     },
     {
       "id": 202,
+      "name": "Horizon Peak Partners",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3866,6 +4069,7 @@
     },
     {
       "id": 203,
+      "name": "Jane Oak Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3885,6 +4089,7 @@
     },
     {
       "id": 204,
+      "name": "Red Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3904,6 +4109,7 @@
     },
     {
       "id": 205,
+      "name": "Black Group",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3923,6 +4129,7 @@
     },
     {
       "id": 206,
+      "name": "Quantum LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3942,6 +4149,7 @@
     },
     {
       "id": 207,
+      "name": "Sequoia Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -3961,6 +4169,7 @@
     },
     {
       "id": 208,
+      "name": "Blue Coast Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -3980,6 +4189,7 @@
     },
     {
       "id": 209,
+      "name": "Two LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -3999,6 +4209,7 @@
     },
     {
       "id": 210,
+      "name": "Vanguard Oak Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4018,6 +4229,7 @@
     },
     {
       "id": 211,
+      "name": "Citadel Point Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4037,6 +4249,7 @@
     },
     {
       "id": 212,
+      "name": "White Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4056,6 +4269,7 @@
     },
     {
       "id": 213,
+      "name": "Stone Tree Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4075,6 +4289,7 @@
     },
     {
       "id": 214,
+      "name": "Silver Sky Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -4094,6 +4309,7 @@
     },
     {
       "id": 215,
+      "name": "Red Star Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4113,6 +4329,7 @@
     },
     {
       "id": 216,
+      "name": "Stone Pine Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4132,6 +4349,7 @@
     },
     {
       "id": 217,
+      "name": "Quantum Star LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4151,6 +4369,7 @@
     },
     {
       "id": 218,
+      "name": "Optima Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4170,6 +4389,7 @@
     },
     {
       "id": 219,
+      "name": "Blue L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4189,6 +4409,7 @@
     },
     {
       "id": 220,
+      "name": "Sequoia Partners",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4208,6 +4429,7 @@
     },
     {
       "id": 221,
+      "name": "Citadel LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4227,6 +4449,7 @@
     },
     {
       "id": 222,
+      "name": "Milestone Rock Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4246,6 +4469,7 @@
     },
     {
       "id": 223,
+      "name": "Silver Peak Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4265,6 +4489,7 @@
     },
     {
       "id": 224,
+      "name": "Sequoia LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4284,6 +4509,7 @@
     },
     {
       "id": 225,
+      "name": "Optima L.P.",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4303,6 +4529,7 @@
     },
     {
       "id": 226,
+      "name": "Silver Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4322,6 +4549,7 @@
     },
     {
       "id": 227,
+      "name": "Milestone LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4341,6 +4569,7 @@
     },
     {
       "id": 228,
+      "name": "Apex Fund",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4360,6 +4589,7 @@
     },
     {
       "id": 229,
+      "name": "Quantum Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -4379,6 +4609,7 @@
     },
     {
       "id": 230,
+      "name": "Virtu Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4398,6 +4629,7 @@
     },
     {
       "id": 231,
+      "name": "Two Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4417,6 +4649,7 @@
     },
     {
       "id": 232,
+      "name": "AQR Peak Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4436,6 +4669,7 @@
     },
     {
       "id": 233,
+      "name": "Silver Oak Partners",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4455,6 +4689,7 @@
     },
     {
       "id": 234,
+      "name": "Vanguard Point Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4474,6 +4709,7 @@
     },
     {
       "id": 235,
+      "name": "Quantum Valley Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4493,6 +4729,7 @@
     },
     {
       "id": 236,
+      "name": "Vanguard Stone Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4512,6 +4749,7 @@
     },
     {
       "id": 237,
+      "name": "Milestone Sigma L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4531,6 +4769,7 @@
     },
     {
       "id": 238,
+      "name": "Citadel Point Partners",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4550,6 +4789,7 @@
     },
     {
       "id": 239,
+      "name": "Blue Point L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4569,6 +4809,7 @@
     },
     {
       "id": 240,
+      "name": "Stone Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4588,6 +4829,7 @@
     },
     {
       "id": 241,
+      "name": "Virtu Coast Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4607,6 +4849,7 @@
     },
     {
       "id": 242,
+      "name": "Jane Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -4626,6 +4869,7 @@
     },
     {
       "id": 243,
+      "name": "Cascade Stone Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4645,6 +4889,7 @@
     },
     {
       "id": 244,
+      "name": "Milestone Rock Capital",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4664,6 +4909,7 @@
     },
     {
       "id": 245,
+      "name": "Optima LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4683,6 +4929,7 @@
     },
     {
       "id": 246,
+      "name": "Virtu Sigma Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4702,6 +4949,7 @@
     },
     {
       "id": 247,
+      "name": "Jane Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4721,6 +4969,7 @@
     },
     {
       "id": 248,
+      "name": "Optima Pine Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4740,6 +4989,7 @@
     },
     {
       "id": 249,
+      "name": "Stone Oak LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4759,6 +5009,7 @@
     },
     {
       "id": 250,
+      "name": "Silver Trading",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4778,6 +5029,7 @@
     },
     {
       "id": 251,
+      "name": "Apex Sigma Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4797,6 +5049,7 @@
     },
     {
       "id": 252,
+      "name": "Virtu Sky Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4816,6 +5069,7 @@
     },
     {
       "id": 253,
+      "name": "Optima Oak L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4835,6 +5089,7 @@
     },
     {
       "id": 254,
+      "name": "Citadel L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -4854,6 +5109,7 @@
     },
     {
       "id": 255,
+      "name": "Black Tree Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4873,6 +5129,7 @@
     },
     {
       "id": 256,
+      "name": "Stone Coast Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4892,6 +5149,7 @@
     },
     {
       "id": 257,
+      "name": "Apex Star Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4911,6 +5169,7 @@
     },
     {
       "id": 258,
+      "name": "Blue Tree Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -4930,6 +5189,7 @@
     },
     {
       "id": 259,
+      "name": "Stone Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -4949,6 +5209,7 @@
     },
     {
       "id": 260,
+      "name": "Red Sigma Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -4968,6 +5229,7 @@
     },
     {
       "id": 261,
+      "name": "Jane Peak L.P.",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -4987,6 +5249,7 @@
     },
     {
       "id": 262,
+      "name": "White Coast Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5006,6 +5269,7 @@
     },
     {
       "id": 263,
+      "name": "White Oak Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5025,6 +5289,7 @@
     },
     {
       "id": 264,
+      "name": "Quantum Coast Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5044,6 +5309,7 @@
     },
     {
       "id": 265,
+      "name": "Apex Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5063,6 +5329,7 @@
     },
     {
       "id": 266,
+      "name": "Silver Oak L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -5082,6 +5349,7 @@
     },
     {
       "id": 267,
+      "name": "Apex Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5101,6 +5369,7 @@
     },
     {
       "id": 268,
+      "name": "Milestone Asset Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5120,6 +5389,7 @@
     },
     {
       "id": 269,
+      "name": "Vanguard Ocean Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5139,6 +5409,7 @@
     },
     {
       "id": 270,
+      "name": "Sequoia Oak Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5158,6 +5429,7 @@
     },
     {
       "id": 271,
+      "name": "Red Stone Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5177,6 +5449,7 @@
     },
     {
       "id": 272,
+      "name": "Optima Sky L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -5196,6 +5469,7 @@
     },
     {
       "id": 273,
+      "name": "AQR Peak Holdings",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -5215,6 +5489,7 @@
     },
     {
       "id": 274,
+      "name": "Vanguard Global",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -5234,6 +5509,7 @@
     },
     {
       "id": 275,
+      "name": "Sequoia Peak Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5253,6 +5529,7 @@
     },
     {
       "id": 276,
+      "name": "Apex Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5272,6 +5549,7 @@
     },
     {
       "id": 277,
+      "name": "Sequoia Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5291,6 +5569,7 @@
     },
     {
       "id": 278,
+      "name": "Optima Peak L.P.",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5310,6 +5589,7 @@
     },
     {
       "id": 279,
+      "name": "Blue Stone LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5329,6 +5609,7 @@
     },
     {
       "id": 280,
+      "name": "Red Peak LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -5348,6 +5629,7 @@
     },
     {
       "id": 281,
+      "name": "Virtu Sky Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5367,6 +5649,7 @@
     },
     {
       "id": 282,
+      "name": "Stone Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5386,6 +5669,7 @@
     },
     {
       "id": 283,
+      "name": "Apex Tree Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5405,6 +5689,7 @@
     },
     {
       "id": 284,
+      "name": "AQR Star LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5424,6 +5709,7 @@
     },
     {
       "id": 285,
+      "name": "Two LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5443,6 +5729,7 @@
     },
     {
       "id": 286,
+      "name": "Two Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5462,6 +5749,7 @@
     },
     {
       "id": 287,
+      "name": "Virtu Tree Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5481,6 +5769,7 @@
     },
     {
       "id": 288,
+      "name": "Silver Oak Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -5500,6 +5789,7 @@
     },
     {
       "id": 289,
+      "name": "Sequoia Sigma Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -5519,6 +5809,7 @@
     },
     {
       "id": 290,
+      "name": "Bridgewater Fund",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5538,6 +5829,7 @@
     },
     {
       "id": 291,
+      "name": "Apex Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5557,6 +5849,7 @@
     },
     {
       "id": 292,
+      "name": "Black Tree Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5576,6 +5869,7 @@
     },
     {
       "id": 293,
+      "name": "White Rock Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5595,6 +5889,7 @@
     },
     {
       "id": 294,
+      "name": "AQR Point Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5614,6 +5909,7 @@
     },
     {
       "id": 295,
+      "name": "Red Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5633,6 +5929,7 @@
     },
     {
       "id": 296,
+      "name": "Blue Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -5652,6 +5949,7 @@
     },
     {
       "id": 297,
+      "name": "Red Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -5671,6 +5969,7 @@
     },
     {
       "id": 298,
+      "name": "Vanguard Sigma Capital",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5690,6 +5989,7 @@
     },
     {
       "id": 299,
+      "name": "Black River Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5709,6 +6009,7 @@
     },
     {
       "id": 300,
+      "name": "Apex Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5728,6 +6029,7 @@
     },
     {
       "id": 301,
+      "name": "Bridgewater Stone L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -5747,6 +6049,7 @@
     },
     {
       "id": 302,
+      "name": "Red Pine Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -5766,6 +6069,7 @@
     },
     {
       "id": 303,
+      "name": "Black Peak Capital",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5785,6 +6089,7 @@
     },
     {
       "id": 304,
+      "name": "Jane Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5804,6 +6109,7 @@
     },
     {
       "id": 305,
+      "name": "AQR Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -5823,6 +6129,7 @@
     },
     {
       "id": 306,
+      "name": "Jane Pine Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -5842,6 +6149,7 @@
     },
     {
       "id": 307,
+      "name": "Silver Peak Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5861,6 +6169,7 @@
     },
     {
       "id": 308,
+      "name": "Stone Rock Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5880,6 +6189,7 @@
     },
     {
       "id": 309,
+      "name": "Optima Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5899,6 +6209,7 @@
     },
     {
       "id": 310,
+      "name": "Horizon L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5918,6 +6229,7 @@
     },
     {
       "id": 311,
+      "name": "Bridgewater Ocean Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -5937,6 +6249,7 @@
     },
     {
       "id": 312,
+      "name": "Horizon Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5956,6 +6269,7 @@
     },
     {
       "id": 313,
+      "name": "Black Star Fund",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -5975,6 +6289,7 @@
     },
     {
       "id": 314,
+      "name": "White Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -5994,6 +6309,7 @@
     },
     {
       "id": 315,
+      "name": "Jane Pine Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6013,6 +6329,7 @@
     },
     {
       "id": 316,
+      "name": "Optima LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6032,6 +6349,7 @@
     },
     {
       "id": 317,
+      "name": "Silver River Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6051,6 +6369,7 @@
     },
     {
       "id": 318,
+      "name": "Sequoia L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6070,6 +6389,7 @@
     },
     {
       "id": 319,
+      "name": "Stone Point Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6089,6 +6409,7 @@
     },
     {
       "id": 320,
+      "name": "Red Valley Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6108,6 +6429,7 @@
     },
     {
       "id": 321,
+      "name": "Silver Tree LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6127,6 +6449,7 @@
     },
     {
       "id": 322,
+      "name": "Virtu Stone L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6146,6 +6469,7 @@
     },
     {
       "id": 323,
+      "name": "Milestone Ocean Global",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6165,6 +6489,7 @@
     },
     {
       "id": 324,
+      "name": "Quantum Ocean L.P.",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6184,6 +6509,7 @@
     },
     {
       "id": 325,
+      "name": "Citadel Street Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6203,6 +6529,7 @@
     },
     {
       "id": 326,
+      "name": "Optima Stone Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6222,6 +6549,7 @@
     },
     {
       "id": 327,
+      "name": "Cascade Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6241,6 +6569,7 @@
     },
     {
       "id": 328,
+      "name": "Quantum Street LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6260,6 +6589,7 @@
     },
     {
       "id": 329,
+      "name": "Bridgewater Point L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6279,6 +6609,7 @@
     },
     {
       "id": 330,
+      "name": "Stone Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6298,6 +6629,7 @@
     },
     {
       "id": 331,
+      "name": "Virtu Fund",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6317,6 +6649,7 @@
     },
     {
       "id": 332,
+      "name": "Citadel Coast Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6336,6 +6669,7 @@
     },
     {
       "id": 333,
+      "name": "Virtu Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6355,6 +6689,7 @@
     },
     {
       "id": 334,
+      "name": "Blue Peak Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6374,6 +6709,7 @@
     },
     {
       "id": 335,
+      "name": "Silver Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6393,6 +6729,7 @@
     },
     {
       "id": 336,
+      "name": "Optima Stone Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6412,6 +6749,7 @@
     },
     {
       "id": 337,
+      "name": "Vanguard Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6431,6 +6769,7 @@
     },
     {
       "id": 338,
+      "name": "White Global",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6450,6 +6789,7 @@
     },
     {
       "id": 339,
+      "name": "Milestone LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6469,6 +6809,7 @@
     },
     {
       "id": 340,
+      "name": "Silver LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6488,6 +6829,7 @@
     },
     {
       "id": 341,
+      "name": "AQR Valley Global",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6507,6 +6849,7 @@
     },
     {
       "id": 342,
+      "name": "AQR Tree Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6526,6 +6869,7 @@
     },
     {
       "id": 343,
+      "name": "Jane Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6545,6 +6889,7 @@
     },
     {
       "id": 344,
+      "name": "Quantum River Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6564,6 +6909,7 @@
     },
     {
       "id": 345,
+      "name": "Sequoia Point Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6583,6 +6929,7 @@
     },
     {
       "id": 346,
+      "name": "Cascade Point Asset Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6602,6 +6949,7 @@
     },
     {
       "id": 347,
+      "name": "Red Ocean Capital",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6621,6 +6969,7 @@
     },
     {
       "id": 348,
+      "name": "Optima Sigma Asset Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6640,6 +6989,7 @@
     },
     {
       "id": 349,
+      "name": "Black Star Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6659,6 +7009,7 @@
     },
     {
       "id": 350,
+      "name": "Two Star L.P.",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6678,6 +7029,7 @@
     },
     {
       "id": 351,
+      "name": "Horizon Tree L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6697,6 +7049,7 @@
     },
     {
       "id": 352,
+      "name": "Bridgewater Fund",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6716,6 +7069,7 @@
     },
     {
       "id": 353,
+      "name": "Bridgewater Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6735,6 +7089,7 @@
     },
     {
       "id": 354,
+      "name": "Black Coast Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6754,6 +7109,7 @@
     },
     {
       "id": 355,
+      "name": "White Street Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6773,6 +7129,7 @@
     },
     {
       "id": 356,
+      "name": "Cascade Sky Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6792,6 +7149,7 @@
     },
     {
       "id": 357,
+      "name": "Jane Coast Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -6811,6 +7169,7 @@
     },
     {
       "id": 358,
+      "name": "Jane Peak L.P.",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6830,6 +7189,7 @@
     },
     {
       "id": 359,
+      "name": "Sequoia Peak Capital",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6849,6 +7209,7 @@
     },
     {
       "id": 360,
+      "name": "Citadel Valley Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6868,6 +7229,7 @@
     },
     {
       "id": 361,
+      "name": "Apex Stone Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -6887,6 +7249,7 @@
     },
     {
       "id": 362,
+      "name": "Jane Sky Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6906,6 +7269,7 @@
     },
     {
       "id": 363,
+      "name": "Milestone River Global",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -6925,6 +7289,7 @@
     },
     {
       "id": 364,
+      "name": "Bridgewater Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6944,6 +7309,7 @@
     },
     {
       "id": 365,
+      "name": "Sequoia Peak LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -6963,6 +7329,7 @@
     },
     {
       "id": 366,
+      "name": "Cascade Holdings",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -6982,6 +7349,7 @@
     },
     {
       "id": 367,
+      "name": "White Sky Capital",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7001,6 +7369,7 @@
     },
     {
       "id": 368,
+      "name": "Jane Peak Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7020,6 +7389,7 @@
     },
     {
       "id": 369,
+      "name": "Citadel Ocean LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7039,6 +7409,7 @@
     },
     {
       "id": 370,
+      "name": "Horizon LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7058,6 +7429,7 @@
     },
     {
       "id": 371,
+      "name": "Vanguard Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7077,6 +7449,7 @@
     },
     {
       "id": 372,
+      "name": "Citadel L.P.",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7096,6 +7469,7 @@
     },
     {
       "id": 373,
+      "name": "Optima Oak Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7115,6 +7489,7 @@
     },
     {
       "id": 374,
+      "name": "Bridgewater Sky Asset Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7134,6 +7509,7 @@
     },
     {
       "id": 375,
+      "name": "Virtu Street LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7153,6 +7529,7 @@
     },
     {
       "id": 376,
+      "name": "Bridgewater Oak Asset Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7172,6 +7549,7 @@
     },
     {
       "id": 377,
+      "name": "White Sigma Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7191,6 +7569,7 @@
     },
     {
       "id": 378,
+      "name": "Red Stone Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7210,6 +7589,7 @@
     },
     {
       "id": 379,
+      "name": "Silver LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7229,6 +7609,7 @@
     },
     {
       "id": 380,
+      "name": "Blue Peak Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7248,6 +7629,7 @@
     },
     {
       "id": 381,
+      "name": "Optima Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7267,6 +7649,7 @@
     },
     {
       "id": 382,
+      "name": "Blue Rock L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7286,6 +7669,7 @@
     },
     {
       "id": 383,
+      "name": "Blue L.P.",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7305,6 +7689,7 @@
     },
     {
       "id": 384,
+      "name": "Jane Sky Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7324,6 +7709,7 @@
     },
     {
       "id": 385,
+      "name": "Jane Sigma Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7343,6 +7729,7 @@
     },
     {
       "id": 386,
+      "name": "Vanguard Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7362,6 +7749,7 @@
     },
     {
       "id": 387,
+      "name": "Stone Oak LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7381,6 +7769,7 @@
     },
     {
       "id": 388,
+      "name": "Jane LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7400,6 +7789,7 @@
     },
     {
       "id": 389,
+      "name": "Jane Pine L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7419,6 +7809,7 @@
     },
     {
       "id": 390,
+      "name": "Two LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7438,6 +7829,7 @@
     },
     {
       "id": 391,
+      "name": "Optima Street Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7457,6 +7849,7 @@
     },
     {
       "id": 392,
+      "name": "Vanguard Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7476,6 +7869,7 @@
     },
     {
       "id": 393,
+      "name": "Optima Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7495,6 +7889,7 @@
     },
     {
       "id": 394,
+      "name": "Quantum Coast Fund",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7514,6 +7909,7 @@
     },
     {
       "id": 395,
+      "name": "Milestone Peak Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7533,6 +7929,7 @@
     },
     {
       "id": 396,
+      "name": "Jane Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7552,6 +7949,7 @@
     },
     {
       "id": 397,
+      "name": "AQR Coast Capital",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7571,6 +7969,7 @@
     },
     {
       "id": 398,
+      "name": "Quantum Peak Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7590,6 +7989,7 @@
     },
     {
       "id": 399,
+      "name": "Horizon Oak LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7609,6 +8009,7 @@
     },
     {
       "id": 400,
+      "name": "Cascade Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7628,6 +8029,7 @@
     },
     {
       "id": 401,
+      "name": "Quantum Fund",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7647,6 +8049,7 @@
     },
     {
       "id": 402,
+      "name": "Virtu Valley Trading",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7666,6 +8069,7 @@
     },
     {
       "id": 403,
+      "name": "Cascade Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7685,6 +8089,7 @@
     },
     {
       "id": 404,
+      "name": "Bridgewater Partners",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7704,6 +8109,7 @@
     },
     {
       "id": 405,
+      "name": "Silver Coast Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7723,6 +8129,7 @@
     },
     {
       "id": 406,
+      "name": "Silver Global",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7742,6 +8149,7 @@
     },
     {
       "id": 407,
+      "name": "Blue Peak Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7761,6 +8169,7 @@
     },
     {
       "id": 408,
+      "name": "Milestone Sigma Trading",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7780,6 +8189,7 @@
     },
     {
       "id": 409,
+      "name": "Bridgewater Street Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7799,6 +8209,7 @@
     },
     {
       "id": 410,
+      "name": "Citadel Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7818,6 +8229,7 @@
     },
     {
       "id": 411,
+      "name": "Black Point Group",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7837,6 +8249,7 @@
     },
     {
       "id": 412,
+      "name": "Blue Point Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -7856,6 +8269,7 @@
     },
     {
       "id": 413,
+      "name": "Black Star Partners",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7875,6 +8289,7 @@
     },
     {
       "id": 414,
+      "name": "Jane Pine Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7894,6 +8309,7 @@
     },
     {
       "id": 415,
+      "name": "Virtu Star Trading",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7913,6 +8329,7 @@
     },
     {
       "id": 416,
+      "name": "Virtu Stone Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -7932,6 +8349,7 @@
     },
     {
       "id": 417,
+      "name": "Stone Rock Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -7951,6 +8369,7 @@
     },
     {
       "id": 418,
+      "name": "Jane Tree Holdings",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -7970,6 +8389,7 @@
     },
     {
       "id": 419,
+      "name": "Virtu Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -7989,6 +8409,7 @@
     },
     {
       "id": 420,
+      "name": "Vanguard Sigma Global",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8008,6 +8429,7 @@
     },
     {
       "id": 421,
+      "name": "Jane Pine Asset Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8027,6 +8449,7 @@
     },
     {
       "id": 422,
+      "name": "Vanguard Oak Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8046,6 +8469,7 @@
     },
     {
       "id": 423,
+      "name": "Quantum Ocean Trading",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8065,6 +8489,7 @@
     },
     {
       "id": 424,
+      "name": "Apex Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8084,6 +8509,7 @@
     },
     {
       "id": 425,
+      "name": "Vanguard River Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8103,6 +8529,7 @@
     },
     {
       "id": 426,
+      "name": "Sequoia Pine Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8122,6 +8549,7 @@
     },
     {
       "id": 427,
+      "name": "AQR LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8141,6 +8569,7 @@
     },
     {
       "id": 428,
+      "name": "Blue Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8160,6 +8589,7 @@
     },
     {
       "id": 429,
+      "name": "Vanguard Street Partners",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8179,6 +8609,7 @@
     },
     {
       "id": 430,
+      "name": "Bridgewater Pine Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8198,6 +8629,7 @@
     },
     {
       "id": 431,
+      "name": "Jane LLC",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8217,6 +8649,7 @@
     },
     {
       "id": 432,
+      "name": "Stone Sky Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8236,6 +8669,7 @@
     },
     {
       "id": 433,
+      "name": "Citadel Valley Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8255,6 +8689,7 @@
     },
     {
       "id": 434,
+      "name": "Silver Oak Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8274,6 +8709,7 @@
     },
     {
       "id": 435,
+      "name": "AQR Sky Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8293,6 +8729,7 @@
     },
     {
       "id": 436,
+      "name": "Stone Sigma Global",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8312,6 +8749,7 @@
     },
     {
       "id": 437,
+      "name": "Milestone Pine Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8331,6 +8769,7 @@
     },
     {
       "id": 438,
+      "name": "Two Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8350,6 +8789,7 @@
     },
     {
       "id": 439,
+      "name": "Red Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8369,6 +8809,7 @@
     },
     {
       "id": 440,
+      "name": "Sequoia Star Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8388,6 +8829,7 @@
     },
     {
       "id": 441,
+      "name": "White Asset Management",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8407,6 +8849,7 @@
     },
     {
       "id": 442,
+      "name": "Black Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8426,6 +8869,7 @@
     },
     {
       "id": 443,
+      "name": "Apex Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8445,6 +8889,7 @@
     },
     {
       "id": 444,
+      "name": "Milestone Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8464,6 +8909,7 @@
     },
     {
       "id": 445,
+      "name": "Bridgewater Holdings",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8483,6 +8929,7 @@
     },
     {
       "id": 446,
+      "name": "Stone Star Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8502,6 +8949,7 @@
     },
     {
       "id": 447,
+      "name": "Cascade Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8521,6 +8969,7 @@
     },
     {
       "id": 448,
+      "name": "AQR River Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8540,6 +8989,7 @@
     },
     {
       "id": 449,
+      "name": "Quantum Valley Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8559,6 +9009,7 @@
     },
     {
       "id": 450,
+      "name": "Two Peak Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8578,6 +9029,7 @@
     },
     {
       "id": 451,
+      "name": "Black Rock Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8597,6 +9049,7 @@
     },
     {
       "id": 452,
+      "name": "Bridgewater Rock Group",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8616,6 +9069,7 @@
     },
     {
       "id": 453,
+      "name": "Jane L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8635,6 +9089,7 @@
     },
     {
       "id": 454,
+      "name": "Stone Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8654,6 +9109,7 @@
     },
     {
       "id": 455,
+      "name": "Sequoia LLC",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8673,6 +9129,7 @@
     },
     {
       "id": 456,
+      "name": "Milestone River Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8692,6 +9149,7 @@
     },
     {
       "id": 457,
+      "name": "Stone Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8711,6 +9169,7 @@
     },
     {
       "id": 458,
+      "name": "Red Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8730,6 +9189,7 @@
     },
     {
       "id": 459,
+      "name": "Black Ocean Asset Management",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8749,6 +9209,7 @@
     },
     {
       "id": 460,
+      "name": "Two Pine L.P.",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8768,6 +9229,7 @@
     },
     {
       "id": 461,
+      "name": "Red Coast Group",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8787,6 +9249,7 @@
     },
     {
       "id": 462,
+      "name": "Vanguard Capital",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8806,6 +9269,7 @@
     },
     {
       "id": 463,
+      "name": "White Pine Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8825,6 +9289,7 @@
     },
     {
       "id": 464,
+      "name": "Black Valley Partners",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8844,6 +9309,7 @@
     },
     {
       "id": 465,
+      "name": "Silver Street Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8863,6 +9329,7 @@
     },
     {
       "id": 466,
+      "name": "Citadel Stone Trading",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -8882,6 +9349,7 @@
     },
     {
       "id": 467,
+      "name": "Red Trading",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -8901,6 +9369,7 @@
     },
     {
       "id": 468,
+      "name": "Milestone Ocean Capital",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -8920,6 +9389,7 @@
     },
     {
       "id": 469,
+      "name": "Jane Rock Holdings",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8939,6 +9409,7 @@
     },
     {
       "id": 470,
+      "name": "Cascade Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8958,6 +9429,7 @@
     },
     {
       "id": 471,
+      "name": "Optima Coast LLC",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -8977,6 +9449,7 @@
     },
     {
       "id": 472,
+      "name": "Vanguard Tree LLC",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -8996,6 +9469,7 @@
     },
     {
       "id": 473,
+      "name": "White Sigma Capital",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -9015,6 +9489,7 @@
     },
     {
       "id": 474,
+      "name": "Silver Ocean Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -9034,6 +9509,7 @@
     },
     {
       "id": 475,
+      "name": "Optima Cascade (HERO)",
       "is_hero_firm": true,
       "hub": "London",
       "location": {
@@ -9053,6 +9529,7 @@
     },
     {
       "id": 476,
+      "name": "AQR Rock Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -9072,6 +9549,7 @@
     },
     {
       "id": 477,
+      "name": "Vanguard L.P.",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9091,6 +9569,7 @@
     },
     {
       "id": 478,
+      "name": "Jane Stone L.P.",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -9110,6 +9589,7 @@
     },
     {
       "id": 479,
+      "name": "Sequoia Point Fund",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9129,6 +9609,7 @@
     },
     {
       "id": 480,
+      "name": "White Pine Capital",
       "is_hero_firm": false,
       "hub": "NYC",
       "location": {
@@ -9148,6 +9629,7 @@
     },
     {
       "id": 481,
+      "name": "White Global",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -9167,6 +9649,7 @@
     },
     {
       "id": 482,
+      "name": "Optima Fund",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -9186,6 +9669,7 @@
     },
     {
       "id": 483,
+      "name": "Blue Pine Asset Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -9205,6 +9689,7 @@
     },
     {
       "id": 484,
+      "name": "Vanguard Pine Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9224,6 +9709,7 @@
     },
     {
       "id": 485,
+      "name": "White Management",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -9243,6 +9729,7 @@
     },
     {
       "id": 486,
+      "name": "Two Rock L.P.",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -9262,6 +9749,7 @@
     },
     {
       "id": 487,
+      "name": "Apex Group",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -9281,6 +9769,7 @@
     },
     {
       "id": 488,
+      "name": "Optima Ocean Capital",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9300,6 +9789,7 @@
     },
     {
       "id": 489,
+      "name": "Blue Pine L.P.",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -9319,6 +9809,7 @@
     },
     {
       "id": 490,
+      "name": "White Peak Global",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9338,6 +9829,7 @@
     },
     {
       "id": 491,
+      "name": "Virtu LLC",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9357,6 +9849,7 @@
     },
     {
       "id": 492,
+      "name": "Black Tree Asset Management",
       "is_hero_firm": false,
       "hub": "London",
       "location": {
@@ -9376,6 +9869,7 @@
     },
     {
       "id": 493,
+      "name": "Vanguard Tree Group",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9395,6 +9889,7 @@
     },
     {
       "id": 494,
+      "name": "White Partners",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -9414,6 +9909,7 @@
     },
     {
       "id": 495,
+      "name": "Horizon Pine Holdings",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9433,6 +9929,7 @@
     },
     {
       "id": 496,
+      "name": "AQR Point Holdings",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {
@@ -9452,6 +9949,7 @@
     },
     {
       "id": 497,
+      "name": "AQR Group",
       "is_hero_firm": false,
       "hub": "Dubai",
       "location": {
@@ -9471,6 +9969,7 @@
     },
     {
       "id": 498,
+      "name": "Optima Star Management",
       "is_hero_firm": false,
       "hub": "Tokyo",
       "location": {
@@ -9490,6 +9989,7 @@
     },
     {
       "id": 499,
+      "name": "Apex Stone Global",
       "is_hero_firm": false,
       "hub": "HongKong",
       "location": {

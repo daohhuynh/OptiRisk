@@ -280,12 +280,28 @@ def export_binary(total_assets, exposures, liabilities, nav, risk_scores, row_pt
 
     # ---- JSON WebGL Export (Preserving backwards compatibility for UI) ----
     json_path = os.path.join(os.path.dirname(__file__), '..', 'optirisk_initial_state.json')
-    # Rebuild the node objects
+    # Generate realistic financial firm names
+    prefixes = ["Apex", "Silver", "Jane", "Citadel", "Optima", "Quantum", "Bridgewater", "AQR", "Two", "Cascade", "Virtu", "Sequoia", "Milestone", "Stone", "Vanguard", "Horizon", "Blue", "Black", "Red", "White"]
+    middles = ["Point", "Street", "River", "Rock", "Ocean", "Sigma", "Tree", "Peak", "Valley", "Stone", "Oak", "Pine", "Coast", "Sky", "Star"]
+    suffixes = ["Capital", "Management", "Trading", "Partners", "Fund", "Group", "Holdings", "Asset Management", "LLC", "L.P.", "Global"]
+    
     nodes_json = []
     hubs = ["NYC", "London", "Tokyo", "HongKong", "Dubai"]
+    
+    np.random.seed(42) # Deterministic names
     for i in range(NUM_NODES):
+        # Construct Name
+        if i == hero_idx:
+            firm_name = "Optima Cascade (HERO)"
+        else:
+            p = np.random.choice(prefixes)
+            m = np.random.choice(middles) if np.random.random() > 0.4 else ""
+            s = np.random.choice(suffixes)
+            firm_name = f"{p} {m} {s}".replace("  ", " ").strip()
+
         nodes_json.append({
             "id": i,
+            "name": firm_name,
             "is_hero_firm": bool(i == hero_idx),
             "hub": hubs[int(hubs_arr[i])],
             "location": {"lat": round(float(lats[i]), 4), "lon": round(float(lons[i]), 4)},
