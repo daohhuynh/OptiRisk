@@ -22,6 +22,7 @@
 #include "memory/csr_graph.hpp"
 #include "concurrency/disruptor.hpp"
 #include "network/wire_protocol.hpp"
+#include "compute/simd_engine.hpp"
 
 // ── Global Shutdown Flag ───────────────────────────────────────────
 static std::atomic<bool> g_running{true};
@@ -94,70 +95,37 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
         }
 
         const auto& shock = engine.shock_ring.get(read_seq);
-        const uint32_t nid = shock.target_node_id;
 
-        // ── Apply shock to portfolio ──────────────────────────────
-        graph.nodes.equities_exposure[nid]    *= (1.0 + shock.equities_delta);
-        graph.nodes.real_estate_exposure[nid] *= (1.0 + shock.real_estate_delta);
-        graph.nodes.crypto_exposure[nid]      *= (1.0 + shock.crypto_delta);
-        graph.nodes.treasuries_exposure[nid]  *= (1.0 + shock.treasuries_delta);
-        graph.nodes.corp_bonds_exposure[nid]  *= (1.0 + shock.corp_bonds_delta);
-
-        // Recalculate total assets and NAV
-        const double old_nav = graph.nodes.nav[nid];
-        const double new_total = graph.nodes.equities_exposure[nid]
-                               + graph.nodes.real_estate_exposure[nid]
-                               + graph.nodes.crypto_exposure[nid]
-                               + graph.nodes.treasuries_exposure[nid]
-                               + graph.nodes.corp_bonds_exposure[nid];
-        graph.nodes.total_assets[nid] = new_total;
-        graph.nodes.nav[nid] = new_total - graph.nodes.liabilities[nid];
-
-        // ── Risk score update (simplified) ────────────────────────
-        // NAV decline → risk increase (inverse relationship)
-        float risk_delta = (old_nav > 0.0)
-            ? static_cast<float>((old_nav - graph.nodes.nav[nid]) / old_nav) * 0.1f
-            : 0.0f;
-        auto& risk = graph.nodes.risk_score[nid];
-        risk = std::clamp(risk + risk_delta, 0.0f, 1.0f);
-
-        // ── Default detection & cascade ───────────────────────────
-        uint8_t cascade_depth = 0;
-        if (risk > 0.95f && graph.nodes.is_defaulted[nid] == 0) [[unlikely]] {
-            graph.nodes.is_defaulted[nid] = 1;
-            cascade_depth = 1;
-
-            // Propagate shock to neighbors via CSR adjacency
-            auto [begin, end] = graph.neighbors(nid);
-            // Prefetch next node's edge data into L1
-            if (begin < end) {
-                graph.prefetch_neighbors(nid);
-            }
-            for (uint32_t i = begin; i < end; ++i) {
-                uint32_t neighbor = graph.edges.col_idx[i];
-                double debt = graph.edges.weight[i];
-                float contagion = static_cast<float>(
-                    debt / (graph.nodes.total_assets[neighbor] + 1.0)) * 0.3f;
-                graph.nodes.risk_score[neighbor] =
-                    std::clamp(graph.nodes.risk_score[neighbor] + contagion, 0.0f, 1.0f);
-            }
-        }
+        // ── SIMD Compute Kernel (with cycle telemetry) ────────────
+        // apply_shock_simd handles all 3 phases vectorized:
+        //   Phase 1: FMA exposure update  (4 nodes/cycle)
+        //   Phase 2: ILP NAV recompute    (4 nodes/cycle)
+        //   Phase 3: Cascade BFS          (scalar, prefetched)
+        // Returns TickResult with compute_cycles stamped by rdtsc/cntvct.
+        auto result = optirisk::compute::apply_shock_simd(graph, shock);
 
         // ── Build TickDelta and publish ───────────────────────────
+        // For market-wide shocks, we publish a summary TickDelta
+        // representing the first/most-impacted node.
         auto tick_seq = engine.tick_ring.claim(engine.broadcast_cursor, g_running);
-        if (tick_seq == UINT64_MAX) [[unlikely]] break;  // Shutdown during back-pressure
+        if (tick_seq == UINT64_MAX) [[unlikely]] break;
         auto& tick = engine.tick_ring.get(tick_seq);
 
+        const uint32_t nid = shock.target_node_id < graph.num_nodes
+                           ? shock.target_node_id : 0;
+
         tick.node_id        = nid;
-        tick.risk_score     = risk;
+        tick.risk_score     = graph.nodes.risk_score[nid];
         tick.nav            = graph.nodes.nav[nid];
-        tick.exposure_total = new_total;
-        tick.delta_nav      = graph.nodes.nav[nid] - old_nav;
-        tick.delta_exposure = 0.0;  // TODO: track per-tick delta
+        tick.exposure_total = graph.nodes.total_assets[nid];
+        tick.delta_nav      = 0.0;  // TODO: store per-node delta_nav
+        tick.delta_exposure = 0.0;
         tick.is_defaulted   = graph.nodes.is_defaulted[nid];
         tick.hub_id         = static_cast<uint8_t>(graph.nodes.hub_id[nid]);
-        tick.cascade_depth  = cascade_depth;
+        tick.cascade_depth  = static_cast<uint8_t>(
+                                std::min(result.cascade.defaults_triggered, 255u));
         tick.tick_seq       = tick_counter++;
+        tick.compute_cycles = result.compute_cycles;  // <── rdtsc/cntvct delta
 
         engine.tick_ring.publish(tick_seq);
 
@@ -200,14 +168,15 @@ static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine) {
                 ? static_cast<double>(delta) / static_cast<double>(elapsed.count())
                 : 0.0;
 
-            std::printf("[broadcast] tick=%u node=%u risk=%.3f nav=%.0f Δnav=%.0f "
-                        "| %.0f msgs/sec | net=%llu comp=%llu bcast=%llu\n",
+            std::printf("[broadcast] tick=%u node=%u risk=%.3f nav=%.0f "
+                        "| %.0f msgs/sec | cycles=%llu "
+                        "| net=%llu comp=%llu bcast=%llu\n",
                         tick.tick_seq,
                         tick.node_id,
                         static_cast<double>(tick.risk_score),
                         tick.nav,
-                        tick.delta_nav,
                         throughput,
+                        static_cast<unsigned long long>(tick.compute_cycles),
                         static_cast<unsigned long long>(engine.network_count),
                         static_cast<unsigned long long>(engine.compute_count),
                         static_cast<unsigned long long>(engine.broadcast_count));

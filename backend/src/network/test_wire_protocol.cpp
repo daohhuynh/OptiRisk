@@ -39,7 +39,7 @@ static void test_struct_sizes() {
     std::printf("[test] struct sizes\n");
     CHECK(sizeof(MessageHeader) == 4,   "MessageHeader == 4 bytes");
     CHECK(sizeof(ShockPayload)  == 56,  "ShockPayload  == 56 bytes");
-    CHECK(sizeof(TickDelta)     == 48,  "TickDelta      == 48 bytes");
+    CHECK(sizeof(TickDelta)     == 56,  "TickDelta      == 56 bytes");
     std::printf("  MessageHeader: %zu bytes\n", sizeof(MessageHeader));
     std::printf("  ShockPayload:  %zu bytes\n", sizeof(ShockPayload));
     std::printf("  TickDelta:     %zu bytes\n", sizeof(TickDelta));
@@ -72,6 +72,7 @@ static void test_tick_offsets() {
     CHECK(offsetof(TickDelta, cascade_depth)   == 42, "cascade_depth @ 42");
     CHECK(offsetof(TickDelta, _pad)            == 43, "_pad @ 43");
     CHECK(offsetof(TickDelta, tick_seq)        == 44, "tick_seq @ 44");
+    CHECK(offsetof(TickDelta, compute_cycles)  == 48, "compute_cycles @ 48");
 }
 
 // ── Test 4: ShockPayload Round-Trip ───────────────────────────────
@@ -129,6 +130,7 @@ static void test_tick_roundtrip() {
     original.hub_id         = 3;
     original.cascade_depth  = 2;
     original.tick_seq       = 999999;
+    original.compute_cycles = 42424242ULL;
 
     // Serialize
     uint8_t buf[128];
@@ -155,6 +157,7 @@ static void test_tick_roundtrip() {
     CHECK(parsed.hub_id         == 3,       "hub_id preserved");
     CHECK(parsed.cascade_depth  == 2,       "cascade_depth preserved");
     CHECK(parsed.tick_seq       == 999999,  "tick_seq preserved");
+    CHECK(parsed.compute_cycles == 42424242ULL, "compute_cycles preserved");
 }
 
 // ── Test 6: Buffer Too Small ──────────────────────────────────────

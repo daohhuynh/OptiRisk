@@ -111,7 +111,7 @@ enum class ShockType : uint32_t {
 // only the fields that changed — NOT a full snapshot. The frontend
 // applies these deltas to its local state buffer.
 //
-// Wire layout (48 bytes):
+// Wire layout (56 bytes):
 //   [0..3]   node_id         uint32_t
 //   [4..7]   risk_score      float     (updated risk ∈ [0.0, 1.0])
 //   [8..15]  nav             double    (updated NAV)
@@ -123,6 +123,7 @@ enum class ShockType : uint32_t {
 //   [42]     cascade_depth   uint8_t   (BFS depth if part of cascade, else 0)
 //   [43]     _pad            uint8_t   (alignment padding, zero)
 //   [44..47] tick_seq        uint32_t  (monotonic tick counter)
+//   [48..55] compute_cycles  uint64_t  (CPU cycles for SIMD compute kernel)
 //
 #pragma pack(push, 1)
 struct TickDelta {
@@ -137,11 +138,12 @@ struct TickDelta {
     uint8_t  cascade_depth;
     uint8_t  _pad = 0;
     uint32_t tick_seq;
+    uint64_t compute_cycles;   // CPU cycles spent in SIMD compute kernel (rdtsc/cntvct)
 };
 #pragma pack(pop)
 
-static_assert(sizeof(TickDelta) == 48,
-              "TickDelta must be exactly 48 bytes");
+static_assert(sizeof(TickDelta) == 56,
+              "TickDelta must be exactly 56 bytes");
 static_assert(std::is_trivially_copyable_v<TickDelta>,
               "TickDelta must be trivially copyable for memcpy");
 
