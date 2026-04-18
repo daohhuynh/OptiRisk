@@ -95,7 +95,7 @@ struct alignas(64) OrderBook {
             
             level.depth -= fill;
             
-            if (bbo_buffer && bbo_count && *bbo_count < 2048) {
+            if (bbo_buffer && bbo_count && *bbo_count < CLOBEngine::BBO_BUFFER_SIZE) {
                 bbo_buffer[*bbo_count] = { asset_id, 0 /*Bid*/, static_cast<float>(level.price), static_cast<float>(level.depth), {0} };
                 (*bbo_count)++;
             }
@@ -148,7 +148,7 @@ struct alignas(64) OrderBook {
             
             level.depth -= fill;
             
-            if (bbo_buffer && bbo_count && *bbo_count < 2048) {
+            if (bbo_buffer && bbo_count && *bbo_count < CLOBEngine::BBO_BUFFER_SIZE) {
                 bbo_buffer[*bbo_count] = { asset_id, 1 /*Ask*/, static_cast<float>(level.price), static_cast<float>(level.depth), {0} };
                 (*bbo_count)++;
             }
@@ -213,11 +213,12 @@ struct alignas(64) OrderBook {
 #include <atomic>
 
 struct alignas(64) CLOBEngine {
+    static constexpr uint32_t BBO_BUFFER_SIZE = 2048;
     std::array<OrderBook, NUM_ASSETS> books;
     
     // ── Zero-Allocation Ping-Pong BBO Buffer ──────────────────────────────────
     // Double buffer allows uninterrupted compute while broadcasting
-    alignas(64) std::array<optirisk::network::BboUpdate, 2048> bbo_buffer[2]{};
+    alignas(64) std::array<optirisk::network::BboUpdate, BBO_BUFFER_SIZE> bbo_buffer[2]{};
     alignas(64) uint32_t bbo_count[2]{0, 0};
     
     // std::atomic enforces hard memory barriers across cores ensuring broadcast_thread

@@ -46,8 +46,8 @@
 
 namespace optirisk::compute {
 
-using namespace optirisk::memory;
-using namespace optirisk::network;
+// Using native memory and network models
+// Scoped explicitly in the implementation to avoid header pollution
 
 // ── Compile-Time Constants ────────────────────────────────────────
 inline constexpr uint32_t SIMD_WIDTH    = 4;       // 4 doubles per vector (AVX2)
@@ -320,7 +320,7 @@ struct CascadeResult {
 };
 
 __attribute__((always_inline))
-inline CascadeResult run_cascade(CSRGraph& graph,
+inline CascadeResult run_cascade(optirisk::memory::CSRGraph& graph,
                                  const double* __restrict__ old_nav,
                                  const uint32_t count) noexcept {
     CascadeResult result{0, 0};
@@ -397,8 +397,8 @@ struct TickResult {
     uint64_t      compute_cycles;  // CPU cycles for the entire SIMD tick
 };
 
-inline TickResult apply_shock_simd(CSRGraph& graph,
-                                   const ShockPayload& shock) noexcept {
+inline TickResult apply_shock_simd(optirisk::memory::CSRGraph& graph,
+                                   const optirisk::network::ShockPayload& shock) noexcept {
     const uint32_t N = graph.num_nodes;
 
     // ── TELEMETRY: capture cycle counter BEFORE any work ───────────
@@ -407,7 +407,7 @@ inline TickResult apply_shock_simd(CSRGraph& graph,
     // ── Step 0: Snapshot old NAV for risk delta calculation ────────
     // We need the pre-shock NAV to compute how much each node's
     // risk increased. Stack-allocate the snapshot — 500 × 8 = 4 KB.
-    alignas(64) double old_nav[MAX_NODES];
+    alignas(64) double old_nav[optirisk::memory::MAX_NODES];
 
 #if defined(OPTIRISK_AVX2)
     // SIMD copy: 4 doubles per iteration

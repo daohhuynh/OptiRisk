@@ -23,7 +23,6 @@
 #include "network/ws_listener.hpp"
 #include "network/udp_publisher.hpp"
 #include "utils/affinity.hpp"
-#include "memory/csr_graph.hpp"
 #include "memory/options_book.hpp"
 #include "market/order_book.hpp"
 #include "compute/simd_engine.hpp"
@@ -35,7 +34,7 @@ uint32_t HERO_FIRM_ID = 0;
 // ── Global Shutdown Flag ───────────────────────────────────────────
 static std::atomic<bool> g_running{true};
 
-static void signal_handler(int) {
+static void signal_handler([[maybe_unused]] int signum) {
     g_running.store(false, std::memory_order_relaxed);
 }
 
@@ -79,7 +78,7 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
         const auto& shock = engine.shock_ring.get(read_seq);
 
         // 1. VaR Monte Carlo (for the Hero firm)
-        auto var_result = optirisk::compute::run_monte_carlo_var(graph, shock);
+        const auto var_result = optirisk::compute::run_monte_carlo_var(graph, shock);
 
         // Print VaR for monitoring (production would route this via a dedicated queue)
         if (tick_counter % 100 == 0) {
@@ -94,7 +93,7 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
         }
 
         // 2. Cascade Physics Loop 
-        auto stats = optirisk::compute::run_cascade_tick(clob, graph, options, shock);
+        const auto stats = optirisk::compute::run_cascade_tick(clob, graph, options, shock);
 
         // Publish TickDelta for Hero Firm as summary (and potentially all defaults in a real setup)
         auto tick_seq = engine.tick_ring.claim(engine.broadcast_cursor, g_running);
