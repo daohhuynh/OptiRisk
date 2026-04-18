@@ -5,6 +5,8 @@ interface UIState {
   hoveredNeighborIds: Set<number>;
   selectedNodeId: number | null;
   highlightedNeighborIds: Set<number>;
+  selectedCityName: string | null;
+  hoveredCityName: string | null;
   isChatOpen: boolean;
   isNodeInfoOpen: boolean;
   viewportLng: number;
@@ -15,6 +17,8 @@ interface UIState {
   setHoveredNode: (id: number | null, neighbors?: number[]) => void;
   setSelectedNode: (id: number | null, neighbors?: number[]) => void;
   clearSelection: () => void;
+  setSelectedCity: (name: string | null) => void;
+  setHoveredCity: (name: string | null) => void;
   toggleChat: () => void;
   setViewport: (v: Partial<Pick<UIState, 'viewportLng' | 'viewportLat' | 'viewportZoom' | 'viewportPitch' | 'viewportBearing'>>) => void;
 }
@@ -24,6 +28,8 @@ export const useUIStore = create<UIState>((set, get) => ({
   hoveredNeighborIds: new Set(),
   selectedNodeId: null,
   highlightedNeighborIds: new Set(),
+  selectedCityName: null,
+  hoveredCityName: null,
   isChatOpen: true,
   isNodeInfoOpen: false,
   viewportLng: 20,
@@ -53,6 +59,18 @@ export const useUIStore = create<UIState>((set, get) => ({
     highlightedNeighborIds: new Set(),
     isNodeInfoOpen: false,
   }),
+
+  setSelectedCity: (name) => set({
+    selectedCityName: name,
+    selectedNodeId: null,
+    highlightedNeighborIds: new Set(),
+    isNodeInfoOpen: false,
+  }),
+
+  setHoveredCity: (name) => {
+    if (name === get().hoveredCityName) return;
+    set({ hoveredCityName: name });
+  },
 
   toggleChat: () => set((s) => ({ isChatOpen: !s.isChatOpen })),
 

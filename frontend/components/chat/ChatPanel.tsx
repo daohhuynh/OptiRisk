@@ -40,6 +40,31 @@ export default function ChatPanel() {
     });
   };
 
+  const isChatOpen = useUIStore(s => s.isChatOpen);
+
+  if (!isChatOpen) {
+    return (
+      <button
+        onClick={toggleChat}
+        className="flex flex-col items-center justify-center w-8 gap-2 py-3 transition-colors"
+        style={{
+          background: 'rgba(4,8,16,0.85)',
+          border: '1px solid rgba(0,200,255,0.12)',
+          color: '#4a7a9b',
+        }}
+        title="Open event log"
+      >
+        <span className="text-[#00e5ff] text-xs">›</span>
+        <span
+          className="text-[9px] tracking-[0.2em] text-[#4a7a9b]"
+          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontFamily: 'Chakra Petch, sans-serif' }}
+        >
+          EVENTS
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div
       className="panel-bracket flex flex-col h-full text-[#c8e6f5] overflow-hidden"
@@ -61,7 +86,7 @@ export default function ChatPanel() {
             onClick={toggleChat}
             className="text-[#4a7a9b] hover:text-[#c8e6f5] text-xs transition-colors"
           >
-            ✕
+            ‹
           </button>
         </div>
       </div>

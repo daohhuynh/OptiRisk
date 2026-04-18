@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import DeckGL from '@deck.gl/react';
 import { MapView } from '@deck.gl/core';
 import { Map } from 'react-map-gl/maplibre';
@@ -14,7 +14,16 @@ import { buildAdjacencyIndex, getNeighborhood } from '@/lib/graph/indexing';
 import { buildNodeLayers } from './layers/nodeLayer';
 import { buildEdgeLayers, buildStableEdgeData } from './layers/edgeLayer';
 import { buildLabelLayer } from './layers/labelLayer';
-import { buildGeoLabelsLayer } from './layers/geoLabelsLayer';
+import { useFormationAnimation } from '@/hooks/useFormationAnimation';
+import { buildBlobLabelLayer } from './layers/blobLabelLayer';
+import { buildCityHubLayers } from './layers/cityHubLayer';
+import { buildHubEdgeLayer } from './layers/hubEdgeLayer';
+import { buildCityBlobLayers } from './layers/cityBlobLayer';
+import { buildCityEdgeLayer } from './layers/cityEdgeLayer';
+import { buildFocusEdgeLayer } from './layers/focusEdgeLayer';
+import { buildEdgeIndex, deriveFocusEdges } from '@/lib/graph/focusEdges';
+import { deriveHubAggregates, deriveHubEdges, deriveCityHubs, deriveCityEdges } from '@/lib/graph/cityHubs';
+import type { HubAggregate, CityHub } from '@/lib/graph/cityHubs';
 import type { GraphNode } from '@/types/graph';
 
 // Raster-only style — solid dark land, no borders, no labels (labels handled by deck.gl)
@@ -37,7 +46,7 @@ const MAP_STYLE: StyleSpecification = {
   ],
 };
 
-const MIN_ZOOM = 1.8;
+const MIN_ZOOM = 1.2;
 const MAX_ZOOM = 12;
 const MAX_PITCH = 60;
 
@@ -87,6 +96,10 @@ export default function GeoGraphScene() {
   const setHoveredNode     = useUIStore(s => s.setHoveredNode);
   const setSelectedNode    = useUIStore(s => s.setSelectedNode);
   const clearSelection     = useUIStore(s => s.clearSelection);
+  const selectedCityName   = useUIStore(s => s.selectedCityName);
+  const setSelectedCity    = useUIStore(s => s.setSelectedCity);
+  const hoveredCityName    = useUIStore(s => s.hoveredCityName);
+  const setHoveredCity     = useUIStore(s => s.setHoveredCity);
   const phase              = useSimulationStore(s => s.phase);
 
   // Only the bucketed zoom is tracked in React state. Camera (lon/lat/pitch/
@@ -95,7 +108,26 @@ export default function GeoGraphScene() {
 
   const nodeList     = useMemo(() => Array.from(nodes.values()), [nodes]);
   const adjacency    = useMemo(() => buildAdjacencyIndex(edges), [edges]);
+  const edgeIndex    = useMemo(() => buildEdgeIndex(edges), [edges]);
+  const hubAggregates = useMemo(() => deriveHubAggregates(nodeList), [nodeList]);
+  const hubEdges      = useMemo(() => deriveHubEdges(nodeList, edges), [nodeList, edges]);
+  const cityHubs      = useMemo(() => deriveCityHubs(nodeList), [nodeList]);
+  const cityEdges     = useMemo(() => deriveCityEdges(nodeList, edges), [nodeList, edges]);
+
+  // Three zoom levels — company is the default/initial view; city and region
+  // appear only when the user explicitly zooms out past these thresholds.
+  const ZOOM_CITY    = 2.0;
+  const ZOOM_COMPANY = 2.5;
+  const regionMode = zoomBucket < ZOOM_CITY;
+  const cityMode   = zoomBucket >= ZOOM_CITY && zoomBucket < ZOOM_COMPANY;
+  const zoomLevel  = regionMode ? 'region' : cityMode ? 'city' : 'company';
+
+  // Clear hover when crossing a zoom level boundary
+  useEffect(() => { setHoveredCity(null); }, [zoomLevel]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const cascadeActive = phase === 'cascade_running' || phase === 'shock_triggered';
+
+  const { formedNodeIds, formedEdgeKeys, labelsReady, isForming } = useFormationAnimation(nodes, edges);
 
   // Stable arc data — rebuilt only when edges list or node positions change
   // (after initial load, never changes during simulation)
@@ -117,55 +149,144 @@ export default function GeoGraphScene() {
     setSelectedNode(node.id, neighbors);
   }, [adjacency, setSelectedNode]);
 
+  const handleHubSelect = useCallback((hub: HubAggregate | null) => {
+    setSelectedCity(hub ? hub.hubName : null);
+  }, [setSelectedCity]);
+
+  const handleCitySelect = useCallback((hub: CityHub | null) => {
+    setSelectedCity(hub ? hub.cityName : null);
+  }, [setSelectedCity]);
+
+  // Anchor for merged-focus mode: selection wins over hover so the merged
+  // arcs don't jitter as the user moves the mouse around once they've picked.
+  const focusAnchorId = selectedNodeId ?? hoveredNodeId;
+  // Merge focused firm-to-firm edges into one arc per destination city when
+  // a node is focused, the cascade is idle, and the formation animation is
+  // not running. Cascade keeps individual arcs so per-firm contagion stays
+  // visible; formation keeps individual arcs so each one can fade in.
+  const useMergedFocus = focusAnchorId !== null && !cascadeActive && !isForming;
+
   // Split memos so edge layers don't rebuild when only nodes change
   const edgeLayers = useMemo(
     () => buildEdgeLayers(stableEdgeData, {
-      hoveredNodeId,
-      hoveredNeighborIds,
-      selectedNodeId,
-      highlightedIds,
-      cascadeActive,
-      defaultedNodeIds,
+      hoveredNodeId, hoveredNeighborIds, selectedNodeId,
+      highlightedIds, cascadeActive, defaultedNodeIds,
+      formedEdgeKeys, isForming,
+      mergedFocus: useMergedFocus,
     }),
-    [stableEdgeData, hoveredNodeId, hoveredNeighborIds, selectedNodeId, highlightedIds, cascadeActive, defaultedNodeIds],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [stableEdgeData, hoveredNodeId, hoveredNeighborIds, selectedNodeId, highlightedIds, cascadeActive, defaultedNodeIds, formedEdgeKeys, isForming, useMergedFocus, zoomLevel],
+  );
+
+  const focusEdges = useMemo(
+    () => useMergedFocus ? deriveFocusEdges(focusAnchorId, nodes, edgeIndex) : [],
+    [useMergedFocus, focusAnchorId, nodes, edgeIndex],
+  );
+
+  const focusEdgeLayer = useMemo(
+    () => useMergedFocus && focusEdges.length > 0 ? buildFocusEdgeLayer({ edges: focusEdges }) : [],
+    [useMergedFocus, focusEdges],
   );
 
   const nodeLayers = useMemo(
     () => buildNodeLayers({
       nodes: nodeList,
-      hoveredNodeId,
-      hoveredNeighborIds,
-      selectedNodeId,
-      highlightedIds,
-      onHover: handleHover,
-      onSelect: handleSelect,
+      hoveredNodeId, hoveredNeighborIds, selectedNodeId, highlightedIds,
+      onHover: handleHover, onSelect: handleSelect,
+      formedNodeIds, isForming,
     }),
-    [nodeList, hoveredNodeId, hoveredNeighborIds, selectedNodeId, highlightedIds, handleHover, handleSelect],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [nodeList, hoveredNodeId, hoveredNeighborIds, selectedNodeId, highlightedIds, handleHover, handleSelect, formedNodeIds, isForming, zoomLevel],
   );
 
   const labelLayer = useMemo(
     () => buildLabelLayer({
-      nodes: nodeList,
-      hoveredNodeId,
-      hoveredNeighborIds,
-      selectedNodeId,
-      highlightedIds,
-      zoom: zoomBucket,
+      nodes: nodeList, hoveredNodeId, hoveredNeighborIds,
+      selectedNodeId, highlightedIds, zoom: zoomBucket, labelsReady,
     }),
-    [nodeList, hoveredNodeId, hoveredNeighborIds, selectedNodeId, highlightedIds, zoomBucket],
+    [nodeList, hoveredNodeId, hoveredNeighborIds, selectedNodeId, highlightedIds, zoomBucket, labelsReady],
   );
 
-  const geoLabelsLayer = useMemo(
-    () => buildGeoLabelsLayer(nodeList, zoomBucket),
-    [nodeList, zoomBucket],
+  // Neighbor hubs of the focused hub (region zoom). Used by the hub layer to
+  // keep arc endpoints lit while everything else dims.
+  const hubAnchorName = selectedCityName ?? hoveredCityName;
+  const neighborHubs = useMemo(() => {
+    if (!hubAnchorName) return new Set<string>();
+    const set = new Set<string>();
+    for (const e of hubEdges) {
+      if (e.sourceHub === hubAnchorName) set.add(e.targetHub);
+      else if (e.targetHub === hubAnchorName) set.add(e.sourceHub);
+    }
+    return set;
+  }, [hubAnchorName, hubEdges]);
+
+  const regionHubLayers = useMemo(
+    () => buildCityHubLayers({
+      hubs: hubAggregates, selectedHubName: selectedCityName,
+      hoveredHubName: hoveredCityName, neighborHubs,
+      onSelect: handleHubSelect, onHover: setHoveredCity,
+    }),
+    [hubAggregates, selectedCityName, hoveredCityName, neighborHubs, handleHubSelect, setHoveredCity, zoomLevel],
   );
 
-  const layers = [
-    ...edgeLayers,
-    ...nodeLayers,
-    ...(geoLabelsLayer ? [geoLabelsLayer] : []),
-    labelLayer,
-  ];
+  const regionEdgeLayers = useMemo(
+    () => buildHubEdgeLayer({ edges: hubEdges, hoveredHubName: hoveredCityName, selectedHubName: selectedCityName }),
+    [hubEdges, hoveredCityName, selectedCityName, zoomLevel],
+  );
+
+  // Neighbor cities of the focused city (city zoom). Each cityEdge's `key` is
+  // `${a}||${b}` where a/b are the two city names sorted; split it to find
+  // the other endpoint relative to the anchor.
+  const cityAnchorName = selectedCityName ?? hoveredCityName;
+  const neighborCities = useMemo(() => {
+    if (!cityAnchorName) return new Set<string>();
+    const set = new Set<string>();
+    for (const e of cityEdges) {
+      const [a, b] = e.key.split('||');
+      if (a === cityAnchorName) set.add(b);
+      else if (b === cityAnchorName) set.add(a);
+    }
+    return set;
+  }, [cityAnchorName, cityEdges]);
+
+  const cityBlobLayers = useMemo(
+    () => buildCityBlobLayers({
+      hubs: cityHubs, selectedCityName, hoveredCityName, neighborCities,
+      onSelect: handleCitySelect, onHover: setHoveredCity,
+    }),
+    [cityHubs, selectedCityName, hoveredCityName, neighborCities, handleCitySelect, setHoveredCity, zoomLevel],
+  );
+
+  const cityEdgeLayers = useMemo(
+    () => buildCityEdgeLayer({ edges: cityEdges, hoveredCityName, selectedCityName }),
+    [cityEdges, hoveredCityName, selectedCityName, zoomLevel],
+  );
+
+  // One bright label per blob, mirroring the firm-label palette: anchor pops
+  // in cyan, neighbours stay legible, idle is muted, dimmed elements fade.
+  const hubLabelLayer = useMemo(
+    () => buildBlobLabelLayer({
+      kind: 'hub', items: hubAggregates,
+      anchorName: selectedCityName, hoveredName: hoveredCityName,
+      neighbors: neighborHubs,
+    }),
+    [hubAggregates, selectedCityName, hoveredCityName, neighborHubs],
+  );
+
+  const cityLabelLayer = useMemo(
+    () => buildBlobLabelLayer({
+      kind: 'city', items: cityHubs,
+      anchorName: selectedCityName, hoveredName: hoveredCityName,
+      neighbors: neighborCities,
+    }),
+    [cityHubs, selectedCityName, hoveredCityName, neighborCities],
+  );
+
+  const layers = regionMode
+    ? [...regionEdgeLayers, ...regionHubLayers, hubLabelLayer]
+    : cityMode
+    ? [...cityEdgeLayers, ...cityBlobLayers, cityLabelLayer]
+    : [...edgeLayers, ...focusEdgeLayer, ...nodeLayers, labelLayer];
 
   // Deck.gl owns the camera. This callback fires on every drag/zoom tick but we
   // only commit to React state when the bucketed zoom actually changes — most
