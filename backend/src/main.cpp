@@ -115,6 +115,9 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
 
         engine.tick_ring.publish(tick_seq);
 
+        // Cascade finished. Swap the BBO double buffer exposing the inactive queue to the broadcast thread.
+        clob.flip_buffers();
+
         ++read_seq;
         engine.compute_cursor.value.store(read_seq, std::memory_order_release);
         ++engine.compute_count;
@@ -124,6 +127,7 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
 // ── Thread 3: Broadcast (Binary Publisher) ─────────────────────────
 static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine,
                              optirisk::network::WsListener& listener,
+                             optirisk::market::CLOBEngine& clob,
                              optirisk::network::UdpPublisher& udp) {
     optirisk::utils::pin_thread_to_core(3); // Isolate Exgress Network to Core 3
 
@@ -148,6 +152,12 @@ static void broadcast_thread(optirisk::concurrency::DisruptorEngine& engine,
         
         // UDP Multicast broadcast (UDP ITCH)
         udp.broadcast_tick(tick);
+
+        // Iterate BBO delta array and blast 10-byte limits via direct scatter-gather
+        auto bbo_deltas = clob.get_inactive_read_buffer();
+        if (!bbo_deltas.empty()) {
+            udp.broadcast_bbo(bbo_deltas);
+        }
 
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_report);
@@ -280,7 +290,7 @@ int main() {
     // Launch pipeline threads
     std::thread t1(network_thread,   std::ref(engine), std::ref(listener));
     std::thread t2(compute_thread,   std::ref(engine), std::ref(graph), std::ref(options), std::ref(clob), std::ref(udp));
-    std::thread t3(broadcast_thread, std::ref(engine), std::ref(listener), std::ref(udp));
+    std::thread t3(broadcast_thread, std::ref(engine), std::ref(listener), std::ref(clob), std::ref(udp));
 
     std::printf("[main] Pipeline running on WS port 8080. Press Ctrl+C to stop.\n\n");
 

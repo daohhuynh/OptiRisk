@@ -17,6 +17,9 @@
 #include <cstdint>
 #include <array>
 #include <algorithm>
+#include <span>
+
+#include "network/protocol.hpp"
 #include <cmath>
 
 namespace optirisk::market {
@@ -73,7 +76,10 @@ struct alignas(64) OrderBook {
     // Sell 'units' by walking down the bid stack.
     // Simulates a forced liquidation eating into market liquidity.
     __attribute__((always_inline))
-    inline FillResult market_sell(double units) noexcept {
+    inline FillResult market_sell(double units, 
+                                  optirisk::network::BboUpdate* bbo_buffer = nullptr, 
+                                  uint32_t* bbo_count = nullptr, 
+                                  uint8_t asset_id = 0) noexcept {
         if (bids_head >= num_bids || units <= 0.0) [[unlikely]] {
             return {0.0, 0.0, 0.0, last_price, 0};
         }
@@ -88,6 +94,12 @@ struct alignas(64) OrderBook {
             double fill = std::min(remaining_units, level.depth);
             
             level.depth -= fill;
+            
+            if (bbo_buffer && bbo_count && *bbo_count < 2048) {
+                bbo_buffer[*bbo_count] = { asset_id, 0 /*Bid*/, static_cast<float>(level.price), static_cast<float>(level.depth), {0} };
+                (*bbo_count)++;
+            }
+
             remaining_units -= fill;
             total_proceeds += fill * level.price;
             last_price = level.price;
@@ -117,7 +129,10 @@ struct alignas(64) OrderBook {
     // Buy 'units' by walking up the ask stack.
     // Used by 'Sword' action (short covering).
     __attribute__((always_inline))
-    inline FillResult market_buy(double units) noexcept {
+    inline FillResult market_buy(double units,
+                                 optirisk::network::BboUpdate* bbo_buffer = nullptr,
+                                 uint32_t* bbo_count = nullptr,
+                                 uint8_t asset_id = 0) noexcept {
         if (asks_head >= num_asks || units <= 0.0) [[unlikely]] {
             return {0.0, 0.0, 0.0, last_price, 0};
         }
@@ -132,6 +147,12 @@ struct alignas(64) OrderBook {
             double fill = std::min(remaining_units, level.depth);
             
             level.depth -= fill;
+            
+            if (bbo_buffer && bbo_count && *bbo_count < 2048) {
+                bbo_buffer[*bbo_count] = { asset_id, 1 /*Ask*/, static_cast<float>(level.price), static_cast<float>(level.depth), {0} };
+                (*bbo_count)++;
+            }
+
             remaining_units -= fill;
             total_cost += fill * level.price;
             last_price = level.price;
@@ -189,8 +210,41 @@ struct alignas(64) OrderBook {
 };
 
 // ── Global CLOB Context ───────────────────────────────────────────────────
+#include <atomic>
+
 struct alignas(64) CLOBEngine {
     std::array<OrderBook, NUM_ASSETS> books;
+    
+    // ── Zero-Allocation Ping-Pong BBO Buffer ──────────────────────────────────
+    // Double buffer allows uninterrupted compute while broadcasting
+    alignas(64) std::array<optirisk::network::BboUpdate, 2048> bbo_buffer[2]{};
+    alignas(64) uint32_t bbo_count[2]{0, 0};
+    
+    // std::atomic enforces hard memory barriers across cores ensuring broadcast_thread
+    // never reads a half-written packet stream.
+    std::atomic<uint8_t> active_buffer_idx{0};
+
+    // Called by compute_thread to swap the buffers
+    inline void flip_buffers() noexcept {
+        uint8_t current = active_buffer_idx.load(std::memory_order_relaxed);
+        uint8_t next = (current + 1) % 2;
+        bbo_count[next] = 0; // Clear the old inactive buffer before making it active
+        active_buffer_idx.store(next, std::memory_order_release);
+    }
+    
+    // Returns the currently active write buffer pointer and count ref
+    inline void get_write_buffer(optirisk::network::BboUpdate** out_buf, uint32_t** out_count) noexcept {
+        uint8_t current = active_buffer_idx.load(std::memory_order_relaxed);
+        *out_buf = bbo_buffer[current].data();
+        *out_count = &bbo_count[current];
+    }
+    
+    // Returns the read-only inactive buffer for broadcast
+    inline std::span<optirisk::network::BboUpdate> get_inactive_read_buffer() noexcept {
+        uint8_t current = active_buffer_idx.load(std::memory_order_acquire);
+        uint8_t inactive = (current + 1) % 2;
+        return std::span<optirisk::network::BboUpdate>{bbo_buffer[inactive].data(), bbo_count[inactive]};
+    }
 };
 
 // Initializes all order books with realistic baseline prices.

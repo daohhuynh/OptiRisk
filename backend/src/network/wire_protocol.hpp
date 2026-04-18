@@ -35,6 +35,7 @@ enum class MsgType : uint8_t {
     CreditRevoke   = 0x05,  // Frontend → Backend (Shield Action)
     ShortOrder     = 0x06,  // Frontend → Backend (Sword Action)
     VaRReport      = 0x07,  // Backend → Frontend (Monte Carlo results)
+    BboChange      = 0x08,  // Backend → Frontend (ITCH limit order changes)
     Heartbeat      = 0xFE,  // Bidirectional keepalive
     Error          = 0xFF,  // Backend → Frontend (error notification)
 };

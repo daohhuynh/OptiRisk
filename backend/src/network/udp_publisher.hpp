@@ -16,8 +16,11 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/uio.h>
+#include <span>
 
 #include "network/wire_protocol.hpp"
+#include "network/protocol.hpp"
 
 namespace optirisk::network {
 
@@ -94,6 +97,30 @@ public:
 
         sendto(sock_, &buf, sizeof(buf), 0, 
               reinterpret_cast<struct sockaddr*>(&mcast_addr_), sizeof(mcast_addr_));
+    }
+
+    __attribute__((always_inline))
+    inline void broadcast_bbo(std::span<optirisk::network::BboUpdate> deltas) noexcept {
+        if (!valid_ || deltas.empty()) [[unlikely]] return;
+
+        MessageHeader hdr;
+        hdr.msg_type = MsgType::BboChange;
+        hdr._reserved = 0;
+        hdr.payload_len = static_cast<uint16_t>(deltas.size() * sizeof(optirisk::network::BboUpdate));
+
+        struct iovec iov[2];
+        iov[0].iov_base = &hdr;
+        iov[0].iov_len = sizeof(hdr);
+        iov[1].iov_base = deltas.data();
+        iov[1].iov_len = hdr.payload_len;
+
+        struct msghdr msg{};
+        msg.msg_name = &mcast_addr_;
+        msg.msg_namelen = sizeof(mcast_addr_);
+        msg.msg_iov = iov;
+        msg.msg_iovlen = 2;
+
+        sendmsg(sock_, &msg, 0);
     }
 };
 

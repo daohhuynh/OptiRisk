@@ -59,6 +59,11 @@ inline CascadeStats run_cascade_tick(
     std::array<uint32_t, optirisk::memory::MAX_NODES> liquidation_queue{};
     uint32_t liquidations_queued = 0;
 
+    // Fetch zero-allocation BBO trace buffer for recording limit depth alterations
+    optirisk::network::BboUpdate* bbo_buf = nullptr;
+    uint32_t* bbo_count = nullptr;
+    clob.get_write_buffer(&bbo_buf, &bbo_count);
+
     // 2. Cascade Loop
     while (newly_defaulted && current_round < MAX_CASCADE_ROUNDS) {
         newly_defaulted = false;
@@ -111,9 +116,9 @@ inline CascadeStats run_cascade_tick(
                 // To remain Delta-Neutral, node triggers market order.
                 // Slippage is accounted natively by the CLOB shifting its `last_price`.
                 if (hv > 0.0f) {
-                    clob.books[0].market_buy(hv); 
+                    clob.books[0].market_buy(hv, bbo_buf, bbo_count, 0); 
                 } else {
-                    clob.books[0].market_sell(-hv);
+                    clob.books[0].market_sell(-hv, bbo_buf, bbo_count, 0);
                 }
             }
         }
@@ -160,7 +165,7 @@ inline CascadeStats run_cascade_tick(
                         double baseline = clob.books[a].original_baseline;
                         double units = exposure_usd / baseline;
                         
-                        auto fill = clob.books[a].market_sell(units);
+                        auto fill = clob.books[a].market_sell(units, bbo_buf, bbo_count, a);
                         stats.total_slippage += fill.slippage_pct;
                         
                         // Exposure is now seized.
