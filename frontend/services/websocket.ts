@@ -1,3 +1,24 @@
+// ============================================================================
+// websocket.ts — Browser-side transport, now SSE + POST instead of raw WS.
+//
+// We keep the public class name `WebSocketService` and method names so the
+// rest of the app (TopControls, ChatPanel, hooks, etc.) is untouched.
+//
+// Wire layout:
+//   incoming binary frames  ←  EventSource('/api/stream')  ←  Next.js  ←  C++
+//   outgoing shock frames   →  POST /api/shock             →  Next.js  →  C++
+//
+// Why this works when raw ws://localhost:8080 didn't:
+//   * The browser only ever opens a connection to its own origin (the
+//     port it loaded the HTML from). No second port to expose. No CORS,
+//     no mixed content, no WSL2 / VPN / corp-proxy port-forwarding pain.
+//   * SSE is plain HTTP/1.1; every dev server, router, and tunnel passes
+//     it through unchanged.
+//   * The Next.js Node runtime opens ONE persistent ws:// to the C++
+//     backend and fans frames out to all SSE listeners (see
+//     /lib/bridge/upstream.ts).
+// ============================================================================
+
 import {
   parseMessageType,
   decodeTickDelta,
@@ -10,65 +31,91 @@ import { useGraphStore } from '@/store/graphStore';
 import { useSimulationStore } from '@/store/simulationStore';
 import type { TickDeltaMsg } from '@/types/simulation';
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8080';
+const STREAM_URL = '/api/stream';
+const SHOCK_URL = '/api/shock';
 const MAX_BACKOFF_MS = 8000;
 
-// Non-reactive data sink: decouples binary ingestion from React state updates
+// Non-reactive data sink: decouples binary ingestion from React state updates.
 const tickSink = new Map<number, TickDeltaMsg>();
 let rafId: number | null = null;
 
+function base64ToArrayBuffer(b64: string): ArrayBuffer {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; ++i) out[i] = bin.charCodeAt(i);
+  return out.buffer;
+}
+
 class WebSocketService {
-  private ws: WebSocket | null = null;
+  private es: EventSource | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private completeTimer: ReturnType<typeof setTimeout> | null = null;
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingTicks = new Map<number, TickDeltaMsg>();
   private backoffMs = 1000;
   private running = false;
+  private watchdogId: ReturnType<typeof setInterval> | null = null;
+  // Ref-count of active subscribers (page.tsx, MapContainer, etc).
+  // React 18 StrictMode mounts effects twice in dev; without this,
+  // the second cleanup tears down the live SSE connection.
+  private refCount = 0;
 
   start() {
-    if (this.running && this.ws && this.ws.readyState <= WebSocket.OPEN) return;
+    this.refCount++;
+    if (this.running && this.es && this.es.readyState !== EventSource.CLOSED) return;
     this.running = true;
     this.connect();
   }
 
   stop() {
+    if (this.refCount > 0) this.refCount--;
+    if (this.refCount > 0) return; // Other consumers still need it.
     this.running = false;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     if (this.completeTimer) clearTimeout(this.completeTimer);
     if (this.flushTimer) clearTimeout(this.flushTimer);
+    this.stopWatchdog();
     this.pendingTicks.clear();
-    if (this.ws) {
-      this.ws.onclose = null;
-      this.ws.close();
-      this.ws = null;
+    if (this.es) {
+      this.es.close();
+      this.es = null;
     }
     useConnectionStore.getState().setStatus('disconnected');
   }
 
+  // ── Outbound ──────────────────────────────────────────────────────────
+  // Legacy callers (chat panel etc.) still invoke `sendBinary(ArrayBuffer)`.
+  // We forward that frame through the integration bridge unchanged.
   sendBinary(buf: ArrayBuffer): boolean {
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(buf);
-      return true;
-    }
-    // DO NOT flip status to 'error' here — a missed send is a UI no-op,
-    // not a transport failure. The real error will be reported by the
-    // browser via ws.onerror, which already calls setStatus('error').
-    return false;
+    const b64 =
+      typeof window !== 'undefined'
+        ? btoa(String.fromCharCode(...new Uint8Array(buf)))
+        : Buffer.from(buf).toString('base64');
+    void this.postShock({ base64: b64 });
+    return true;
   }
 
-  // Fire-and-forget RESET: tells the backend to reload baseline state.
-  // Backend's compute thread interprets shock_type=0xFF as "reset".
   sendReset(): boolean {
-    const buf = new ArrayBuffer(60);
-    const v = new DataView(buf);
-    v.setUint8(0, 0x01);                  // MsgType.ShockPayload
-    v.setUint8(1, 0);
-    v.setUint16(2, 56, true);             // payload_len
-    v.setUint32(4, 0xFFFFFFFF, true);     // target_node = ALL
-    v.setUint32(8, 0xFF, true);           // shock_type = MAGIC RESET
-    v.setBigUint64(52, BigInt(Date.now()) * 1_000_000n, true);
-    return this.sendBinary(buf);
+    void this.postShock({ reset: true });
+    return true;
+  }
+
+  private async postShock(body: object): Promise<boolean> {
+    try {
+      const r = await fetch(SHOCK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        console.warn('[ws] /api/shock returned', r.status);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn('[ws] /api/shock failed', err);
+      return false;
+    }
   }
 
   clearPendingTicks() {
@@ -88,83 +135,88 @@ class WebSocketService {
     }
   }
 
+  // ── Inbound (SSE) ─────────────────────────────────────────────────────
   private connect() {
     const conn = useConnectionStore.getState();
     conn.setStatus('connecting');
 
+    let es: EventSource;
     try {
-      const ws = new WebSocket(WS_URL);
-      ws.binaryType = 'arraybuffer';
-      this.ws = ws;
+      es = new EventSource(STREAM_URL);
     } catch {
       this.scheduleReconnect();
       return;
     }
+    this.es = es;
 
-    const ws = this.ws;
-
-    ws.onopen = () => {
-      if (this.ws !== ws) return;
-      // We're TCP-connected, but until the first server message arrives we
-      // can't prove the backend is actually alive. Treat as 'connecting'
-      // until the watchdog promotes us to 'connected' on first heartbeat.
-      useConnectionStore.getState().setStatus('connecting');
-      useConnectionStore.getState().setLatency(0);
+    es.onopen = () => {
+      if (this.es !== es) return;
+      // SSE is open to /api/stream; wait for first real frame to mark
+      // the upstream backend healthy. Watchdog handles the timing.
+      // Seed lastMessageTime to NOW so the watchdog doesn't immediately
+      // think we've been silent forever and force-close the connection.
+      const c = useConnectionStore.getState();
+      c.setStatus('connecting');
+      c.recordMessage();
       this.backoffMs = 1000;
       this.startWatchdog();
       useSimulationStore.getState().addEvent({
         id: Math.random().toString(36).slice(2),
         type: 'connected',
         timestamp: Date.now(),
-        label: `> LINK_ESTABLISHED ${WS_URL} (waiting for heartbeat)`,
+        label: `> LINK_ESTABLISHED ${STREAM_URL} (waiting for heartbeat)`,
       });
     };
 
-    ws.onmessage = (evt: MessageEvent<ArrayBuffer>) => {
-      if (this.ws !== ws) return;
-      // Any inbound bytes — heartbeat, tick, var — prove the server is
-      // alive and routing to us. Promote to 'connected' on first byte.
+    es.onmessage = (evt: MessageEvent<string>) => {
+      if (this.es !== es) return;
       const c = useConnectionStore.getState();
       if (c.status !== 'connected') c.setStatus('connected');
-      this.handleMessage(evt.data);
+      const buf = base64ToArrayBuffer(evt.data);
+      this.handleMessage(buf);
       c.recordMessage();
     };
 
-    ws.onerror = () => {
-      if (this.ws !== ws) return;
-      conn.setStatus('error');
-    };
-
-    ws.onclose = () => {
-      if (this.ws !== ws) return;
-      this.stopWatchdog();
-      if (!this.running) return;
-      conn.setStatus('disconnected');
-      useSimulationStore.getState().addEvent({
-        id: Math.random().toString(36).slice(2),
-        type: 'disconnected',
-        timestamp: Date.now(),
-        label: `> LINK_LOST — reconnecting in ${this.backoffMs}ms`,
-      });
-      this.scheduleReconnect();
+    es.onerror = () => {
+      if (this.es !== es) return;
+      // EventSource auto-reconnects, but we still flag status.
+      const c = useConnectionStore.getState();
+      if (c.status === 'connected') c.setStatus('connecting');
+      // If the stream actually CLOSED (vs. transient blip) restart manually.
+      if (es.readyState === EventSource.CLOSED) {
+        es.close();
+        this.es = null;
+        this.stopWatchdog();
+        if (!this.running) return;
+        useSimulationStore.getState().addEvent({
+          id: Math.random().toString(36).slice(2),
+          type: 'disconnected',
+          timestamp: Date.now(),
+          label: `> LINK_LOST — reconnecting in ${this.backoffMs}ms`,
+        });
+        this.scheduleReconnect();
+      }
     };
   }
 
   // ── Bidirectional liveness watchdog ──────────────────────────────────
-  // Backend sends a Heartbeat every 1s. If we haven't heard from the
-  // server in >3s while we believe we're connected, we're not actually
-  // connected — flip the dot back to 'connecting'. If silent for >8s,
-  // tear down the WS so the reconnect loop gets us a fresh socket.
-  private watchdogId: ReturnType<typeof setInterval> | null = null;
+  // Backend pushes a Heartbeat every 1s. If we haven't heard from it in
+  // >3s while we believe we're connected, downgrade to 'connecting'. If
+  // silent for >8s, force-close the SSE so the reconnect loop tries fresh.
   private startWatchdog() {
     this.stopWatchdog();
     this.watchdogId = setInterval(() => {
       const c = useConnectionStore.getState();
-      const last = c.lastMessageTime ?? 0;
-      const silentMs = Date.now() - last;
-      if (this.ws?.readyState !== WebSocket.OPEN) return;
+      // If we haven't recorded a single message yet, don't trip the
+      // silence alarm — we're still in the initial warm-up window.
+      if (c.lastMessageTime == null) return;
+      const silentMs = Date.now() - c.lastMessageTime;
+      if (!this.es || this.es.readyState !== EventSource.OPEN) return;
       if (silentMs > 8000) {
-        try { this.ws.close(); } catch { /* noop */ }
+        try { this.es.close(); } catch { /* noop */ }
+        this.es = null;
+        this.stopWatchdog();
+        this.scheduleReconnect();
         return;
       }
       if (silentMs > 3000 && c.status === 'connected') {
@@ -181,20 +233,16 @@ class WebSocketService {
 
   private handleMessage(buf: ArrayBuffer) {
     const msgType = parseMessageType(buf);
-    const graph = useGraphStore.getState();
     const sim = useSimulationStore.getState();
 
     switch (msgType) {
       case MsgType.TickDelta: {
         const msg = decodeTickDelta(buf);
         if (!msg) return;
-        // Write to non-reactive sink instead of triggering React state update
         tickSink.set(msg.nodeId, msg);
-        // Schedule rAF if not already scheduled
         if (!rafId) {
           rafId = requestAnimationFrame(flushSink);
         }
-        // Preserve existing 16ms setTimeout batching as fallback for low-frequency updates
         this.scheduleTickFlush();
         break;
       }
@@ -209,7 +257,7 @@ class WebSocketService {
         break;
       }
       case MsgType.Heartbeat:
-        // intentional no-op — keeps connection alive, latency already recorded
+        // Heartbeat — proves liveness, nothing else to do.
         break;
       default:
         break;
@@ -218,7 +266,9 @@ class WebSocketService {
 
   private scheduleReconnect() {
     if (!this.running) return;
+    if (this.reconnectTimer) return;
     this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
       this.connect();
     }, this.backoffMs);
     this.backoffMs = Math.min(this.backoffMs * 2, MAX_BACKOFF_MS);
@@ -289,18 +339,16 @@ class WebSocketService {
   }
 }
 
-// flushSink: pulls from non-reactive sink at 60fps and updates React state
+// flushSink: pulls from non-reactive sink at 60fps and updates React state.
 function flushSink() {
   if (tickSink.size === 0) {
     rafId = null;
     return;
   }
 
-  // Read all entries from sink
   const ticks = Array.from(tickSink.values());
   tickSink.clear();
 
-  // Update React state with batched deltas
   const graph = useGraphStore.getState();
   const sim = useSimulationStore.getState();
   let newDefaults = 0;
@@ -341,7 +389,6 @@ function flushSink() {
     useSimulationStore.getState().setPhase('shock_triggered');
   }
 
-  // Reset rafId to allow next frame to be scheduled
   rafId = null;
 }
 

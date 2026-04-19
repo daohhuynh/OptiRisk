@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@deck.gl/react": "^9.1.0",
+    "@types/ws": "^8.18.1",
     "deck.gl": "^9.1.0",
     "lucide-react": "^0.468.0",
     "maplibre-gl": "^4.7.0",
@@ -17,6 +18,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-map-gl": "^8.0.0",
+    "ws": "^8.20.0",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
@@ -27,5 +29,9 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.16",
     "typescript": "^5.7.2"
+  },
+  "optionalDependencies": {
+    "bufferutil": "*",
+    "utf-8-validate": "*"
   }
 }
