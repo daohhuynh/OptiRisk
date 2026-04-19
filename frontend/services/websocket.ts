@@ -105,21 +105,29 @@ class WebSocketService {
 
     ws.onopen = () => {
       if (this.ws !== ws) return;
-      useConnectionStore.getState().setStatus('connected');
+      // We're TCP-connected, but until the first server message arrives we
+      // can't prove the backend is actually alive. Treat as 'connecting'
+      // until the watchdog promotes us to 'connected' on first heartbeat.
+      useConnectionStore.getState().setStatus('connecting');
       useConnectionStore.getState().setLatency(0);
       this.backoffMs = 1000;
+      this.startWatchdog();
       useSimulationStore.getState().addEvent({
         id: Math.random().toString(36).slice(2),
         type: 'connected',
         timestamp: Date.now(),
-        label: `> LINK_ESTABLISHED ${WS_URL}`,
+        label: `> LINK_ESTABLISHED ${WS_URL} (waiting for heartbeat)`,
       });
     };
 
     ws.onmessage = (evt: MessageEvent<ArrayBuffer>) => {
       if (this.ws !== ws) return;
+      // Any inbound bytes — heartbeat, tick, var — prove the server is
+      // alive and routing to us. Promote to 'connected' on first byte.
+      const c = useConnectionStore.getState();
+      if (c.status !== 'connected') c.setStatus('connected');
       this.handleMessage(evt.data);
-      conn.recordMessage();
+      c.recordMessage();
     };
 
     ws.onerror = () => {
@@ -129,6 +137,7 @@ class WebSocketService {
 
     ws.onclose = () => {
       if (this.ws !== ws) return;
+      this.stopWatchdog();
       if (!this.running) return;
       conn.setStatus('disconnected');
       useSimulationStore.getState().addEvent({
@@ -139,6 +148,35 @@ class WebSocketService {
       });
       this.scheduleReconnect();
     };
+  }
+
+  // ── Bidirectional liveness watchdog ──────────────────────────────────
+  // Backend sends a Heartbeat every 1s. If we haven't heard from the
+  // server in >3s while we believe we're connected, we're not actually
+  // connected — flip the dot back to 'connecting'. If silent for >8s,
+  // tear down the WS so the reconnect loop gets us a fresh socket.
+  private watchdogId: ReturnType<typeof setInterval> | null = null;
+  private startWatchdog() {
+    this.stopWatchdog();
+    this.watchdogId = setInterval(() => {
+      const c = useConnectionStore.getState();
+      const last = c.lastMessageTime ?? 0;
+      const silentMs = Date.now() - last;
+      if (this.ws?.readyState !== WebSocket.OPEN) return;
+      if (silentMs > 8000) {
+        try { this.ws.close(); } catch { /* noop */ }
+        return;
+      }
+      if (silentMs > 3000 && c.status === 'connected') {
+        c.setStatus('connecting');
+      }
+    }, 1000);
+  }
+  private stopWatchdog() {
+    if (this.watchdogId) {
+      clearInterval(this.watchdogId);
+      this.watchdogId = null;
+    }
   }
 
   private handleMessage(buf: ArrayBuffer) {

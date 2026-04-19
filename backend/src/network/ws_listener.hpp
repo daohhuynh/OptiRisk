@@ -24,6 +24,8 @@
 #include <cstdint>
 #include <functional>
 #include <atomic>
+#include <thread>
+#include <chrono>
 
 // uWebSockets header — pulls in the full single-header amalgam
 // Suppress C++23 deprecation of std::aligned_storage_t in their MoveOnlyFunction.h
@@ -191,7 +193,35 @@ public:
 
         loop_ = uWS::Loop::get();
         app_ = &app;
+
+        // ── Heartbeat thread ──────────────────────────────────────
+        // Every 1 second, defer a 4-byte Heartbeat publish onto the
+        // uWS event loop. The frontend uses these to derive a true
+        // bidirectional "connected" state instead of trusting the raw
+        // WebSocket readyState.
+        heartbeat_running_.store(true, std::memory_order_release);
+        std::thread heartbeat_thread([this]() {
+            while (heartbeat_running_.load(std::memory_order_acquire)) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                auto* loop = loop_;
+                if (!loop) continue;
+                loop->defer([this]() {
+                    if (!app_) return;
+                    static MessageHeader hdr{ MsgType::Heartbeat, 0, 0 };
+                    app_->publish(
+                        "tick",
+                        std::string_view(reinterpret_cast<const char*>(&hdr),
+                                         sizeof(MessageHeader)),
+                        uWS::BINARY);
+                });
+            }
+        });
+
         app.run();
+
+        heartbeat_running_.store(false, std::memory_order_release);
+        if (heartbeat_thread.joinable()) heartbeat_thread.join();
+
         app_ = nullptr;
         loop_ = nullptr;
     }
@@ -281,6 +311,7 @@ private:
     uint32_t         next_client_id_  = 0;
     uint32_t         active_connections_ = 0;
     std::atomic<uint64_t> dropped_tick_frames_{0};
+    std::atomic<bool> heartbeat_running_{false};
 };
 
 } // namespace optirisk::network

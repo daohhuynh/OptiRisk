@@ -13,6 +13,7 @@ interface GraphState {
   defaultedNodeIds: Set<number>;
   loadSnapshot: (nodes: GraphNode[], edges: GraphEdge[]) => void;
   applyTickDelta: (msg: TickDeltaMsg) => void;
+  applyTickDeltas: (msgs: TickDeltaMsg[]) => void;
   clearChangedNodes: () => void;
   resetAllNodeStates: () => void;
 }
@@ -67,6 +68,31 @@ export const useGraphStore = create<GraphState>((set, get) => ({
       ? new Set([...defaultedNodeIds, msg.nodeId])
       : defaultedNodeIds;
 
+    set({ nodes: newNodes, changedNodeIds: newChanged, defaultedNodeIds: newDefaulted });
+  },
+
+  applyTickDeltas: (msgs) => {
+    if (msgs.length === 0) return;
+    const { nodes, changedNodeIds, defaultedNodeIds } = get();
+    const newNodes = new Map(nodes);
+    const newChanged = new Set(changedNodeIds);
+    const newDefaulted = new Set(defaultedNodeIds);
+
+    for (const msg of msgs) {
+      const existing = newNodes.get(msg.nodeId);
+      if (!existing) continue;
+      newNodes.set(msg.nodeId, {
+        ...existing,
+        riskScore: msg.riskScore,
+        nav: msg.nav,
+        exposureTotal: msg.exposureTotal,
+        isDefaulted: msg.isDefaulted,
+        cascadeDepth: msg.cascadeDepth,
+        state: getNodeState(msg.riskScore, msg.isDefaulted),
+      });
+      newChanged.add(msg.nodeId);
+      if (msg.isDefaulted) newDefaulted.add(msg.nodeId);
+    }
     set({ nodes: newNodes, changedNodeIds: newChanged, defaultedNodeIds: newDefaulted });
   },
 
