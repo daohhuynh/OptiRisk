@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useConnectionStore } from '@/store/connectionStore';
 import { useGraphStore } from '@/store/graphStore';
 import { useSimulationStore } from '@/store/simulationStore';
@@ -8,42 +8,61 @@ import { SHOCK_PRESETS } from '@/types/simulation';
 import type { ShockType } from '@/types/simulation';
 import { encodeShockPayload } from '@/lib/binary/encodeShock';
 import { wsService } from '@/services/websocket';
+import { parseInitialSnapshot } from '@/lib/graph/indexing';
 
 const SHOCK_BUTTONS: { label: string; type: Exclude<ShockType, 'custom'>; danger: boolean }[] = [
-  { label: 'LEHMAN 2008',  type: 'lehman2008',   danger: true  },
-  { label: 'COVID 2020',   type: 'covid2020',    danger: true  },
-  { label: 'RATE HIKE',    type: 'rate_hike',    danger: false },
+  { label: 'LEHMAN 2008', type: 'lehman2008', danger: true },
+  { label: 'COVID 2020', type: 'covid2020', danger: true },
+  { label: 'RATE HIKE', type: 'rate_hike', danger: false },
   { label: 'CRYPTO CRASH', type: 'crypto_crash', danger: false },
 ];
 
 export default function TopControls() {
-  // Granular selectors — each field independent
-  const status        = useConnectionStore(s => s.status);
+  const status = useConnectionStore(s => s.status);
+  const isConnected = useConnectionStore(s => s.isConnected);
+  const setLatency = useConnectionStore(s => s.setLatency);
   const lastLatencyUs = useConnectionStore(s => s.lastLatencyUs);
-  const totalNodes    = useGraphStore(s => s.totalNodes);
+  const totalNodes = useGraphStore(s => s.totalNodes);
+  const loadSnapshot = useGraphStore(s => s.loadSnapshot);
   const totalDefaults = useSimulationStore(s => s.totalDefaults);
-  const currentTick   = useSimulationStore(s => s.currentTick);
-  const phase         = useSimulationStore(s => s.phase);
+  const currentTick = useSimulationStore(s => s.currentTick);
+  const phase = useSimulationStore(s => s.phase);
+  const activeShockConfig = useSimulationStore(s => s.activeShockConfig);
   const recordShockSent = useSimulationStore(s => s.recordShockSent);
-  const reset         = useSimulationStore(s => s.reset);
-
-  const [activeShock, setActiveShock] = useState<string | null>(null);
+  const reset = useSimulationStore(s => s.reset);
 
   const fireShock = useCallback((type: Exclude<ShockType, 'custom'>) => {
     const preset = SHOCK_PRESETS[type];
     const config = { targetNodeId: 0xFFFFFFFF, shockType: type, ...preset };
-    wsService.sendBinary(encodeShockPayload(config));
+    if (!wsService.sendBinary(encodeShockPayload(config))) return;
     recordShockSent(config);
-    setActiveShock(type);
   }, [recordShockSent]);
 
+  // [FIXED] Merged the binary broadcast and state reset into one clean hook
   const handleReset = useCallback(() => {
-    reset();
-    setActiveShock(null);
-  }, [reset]);
+    wsService.clearPendingTicks();
+    // 1. Blast the 0xFF Magic Number to C++ Engine
+    const buffer = new ArrayBuffer(60);
+    const view = new DataView(buffer);
+    view.setUint8(0, 0x01); // MsgType.ShockPayload
+    view.setUint16(2, 56, true);
+    view.setUint32(4, 0xFFFFFFFF, true); // Target: ALL
+    view.setUint32(8, 0xFF, true);       // MAGIC SHOCK_TYPE: 0xFF = Reset
+    wsService.sendBinary(buffer);
 
-  const isConnected  = status === 'connected';
-  const isCascading  = phase === 'cascade_running' || phase === 'shock_triggered';
+    // 2. Clear Frontend State
+    reset();
+    setLatency(0);
+    fetch('/optirisk_initial_state.json')
+      .then((r) => r.json())
+      .then((json) => {
+        const { nodes, edges } = parseInitialSnapshot(json);
+        loadSnapshot(nodes, edges);
+      })
+      .catch(console.error);
+  }, [loadSnapshot, reset, setLatency]);
+
+  const isCascading = phase === 'cascade_running' || phase === 'shock_triggered';
 
   return (
     <div
@@ -79,12 +98,12 @@ export default function TopControls() {
           INJECT SHOCK
         </span>
         {SHOCK_BUTTONS.map(({ label, type, danger }) => {
-          const isActive = activeShock === type;
+          const isActive = activeShockConfig?.shockType === type;
           return (
             <button
               key={type}
               onClick={() => fireShock(type)}
-              disabled={!isConnected}
+              disabled={false}
               className={[
                 'px-3 py-1 text-xs font-semibold tracking-wider transition-all duration-150',
                 'border disabled:opacity-30 disabled:cursor-not-allowed',
@@ -93,8 +112,8 @@ export default function TopControls() {
                     ? 'bg-[#ff2020] border-[#ff2020] text-white'
                     : 'bg-[#ff8c00] border-[#ff8c00] text-white'
                   : danger
-                  ? 'bg-transparent border-[rgba(255,32,32,0.4)] text-[#ff6060] hover:bg-[rgba(255,32,32,0.15)] hover:border-[#ff2020]'
-                  : 'bg-transparent border-[rgba(0,200,255,0.25)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] hover:border-[#00e5ff]',
+                    ? 'bg-transparent border-[rgba(255,32,32,0.4)] text-[#ff6060] hover:bg-[rgba(255,32,32,0.15)] hover:border-[#ff2020]'
+                    : 'bg-transparent border-[rgba(0,200,255,0.25)] text-[#00e5ff] hover:bg-[rgba(0,229,255,0.1)] hover:border-[#00e5ff]',
               ].join(' ')}
               style={{ fontFamily: 'Chakra Petch, sans-serif', borderRadius: '2px' }}
             >
@@ -116,13 +135,14 @@ export default function TopControls() {
             </span>
           </span>
         </div>
-        {activeShock && (
+        {/* [FIXED] Proper JSX Button */}
+        {activeShockConfig && (
           <button
             onClick={handleReset}
-            className="px-2 py-1 text-xs border border-[rgba(0,200,255,0.2)] text-[#4a7a9b] hover:text-[#c8e6f5] hover:border-[rgba(0,200,255,0.5)] transition-all"
+            className="px-3 py-1 text-xs font-semibold tracking-wider text-[#ff2020] border border-[rgba(255,32,32,0.4)] hover:bg-[rgba(255,32,32,0.15)] hover:border-[#ff2020] transition-colors"
             style={{ fontFamily: 'Chakra Petch, sans-serif', borderRadius: '2px' }}
           >
-            RESET
+            RESET SIMULATION
           </button>
         )}
       </div>

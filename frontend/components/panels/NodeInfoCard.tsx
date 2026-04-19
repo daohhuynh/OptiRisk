@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useGraphStore } from '@/store/graphStore';
+import { useSimulationStore } from '@/store/simulationStore'; // [ADDED]
+import { wsService } from '@/services/websocket';
 
 const STATE_COLORS: Record<string, string> = {
   idle:      '#1a3a5c',
@@ -29,7 +31,6 @@ function pct(n: number): string {
 }
 
 interface NodeInfoCardProps {
-  // When true: no outer panel-bracket, used inside another panel
   embedded?: boolean;
 }
 
@@ -38,10 +39,12 @@ export default function NodeInfoCard({ embedded = false }: NodeInfoCardProps) {
   const isNodeInfoOpen = useUIStore(s => s.isNodeInfoOpen);
   const clearSelection = useUIStore(s => s.clearSelection);
   const nodes          = useGraphStore(s => s.nodes);
+  
+  // [ADDED] Pull the latest VaR report from the simulation store
+  const latestVaR      = useSimulationStore(s => s.latestVaR); 
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Collapse whenever a new node is selected
   useEffect(() => { setIsExpanded(false); }, [selectedNodeId]);
 
   const node = useMemo(() =>
@@ -51,6 +54,18 @@ export default function NodeInfoCard({ embedded = false }: NodeInfoCardProps) {
 
   if (!isNodeInfoOpen || !node) return null;
 
+  // [CLEANED UP] The VaR Request function
+  const requestMonteCarloVaR = () => {
+    if (!node) return;
+    const buffer = new ArrayBuffer(60); 
+    const view = new DataView(buffer);
+    view.setUint8(0, 0x01); 
+    view.setUint16(2, 56, true);
+    view.setUint32(4, node.id, true); 
+    view.setUint32(8, 0xFE, true); // MAGIC SHOCK_TYPE: 0xFE = VaR Request
+    wsService.sendBinary(buffer);
+  };
+
   const stateColor = STATE_COLORS[node.state] ?? '#4a7a9b';
   const stateBg    = STATE_BG[node.state]    ?? 'transparent';
 
@@ -58,10 +73,10 @@ export default function NodeInfoCard({ embedded = false }: NodeInfoCardProps) {
   const total = portfolio.equities + portfolio.realEstate + portfolio.crypto + portfolio.treasuries + portfolio.corpBonds;
   const portfolioItems = [
     { label: 'EQ', value: portfolio.equities,   color: '#4ade80' },
-    { label: 'RE', value: portfolio.realEstate,  color: '#60a5fa' },
-    { label: 'CR', value: portfolio.crypto,      color: '#f59e0b' },
-    { label: 'TR', value: portfolio.treasuries,  color: '#a78bfa' },
-    { label: 'CB', value: portfolio.corpBonds,   color: '#34d399' },
+    { label: 'RE', value: portfolio.realEstate, color: '#60a5fa' },
+    { label: 'CR', value: portfolio.crypto,     color: '#f59e0b' },
+    { label: 'TR', value: portfolio.treasuries, color: '#a78bfa' },
+    { label: 'CB', value: portfolio.corpBonds,  color: '#34d399' },
   ];
 
   const outerClass = embedded
@@ -74,7 +89,6 @@ export default function NodeInfoCard({ embedded = false }: NodeInfoCardProps) {
 
   return (
     <div className={outerClass} style={{ fontFamily: 'Chakra Petch, sans-serif' }}>
-
       {/* Collapsed strip — always visible, click to expand */}
       <div
         className={`flex items-center gap-2 px-3 py-2.5 cursor-pointer select-none ${headerBorder}`}
@@ -178,6 +192,29 @@ export default function NodeInfoCard({ embedded = false }: NodeInfoCardProps) {
               <span className="font-mono text-xs text-[#ff2020] font-semibold">{node.cascadeDepth}</span>
             </div>
           )}
+
+          {/* 🚀 VaR BUTTON AND HISTOGRAM 🚀 */}
+          <div className="px-3 pb-3" style={{ borderTop: '1px solid rgba(0,200,255,0.08)' }}>
+            <button 
+              onClick={requestMonteCarloVaR}
+              className="mt-2 w-full py-2 bg-red-900/40 hover:bg-red-800/80 text-red-200 text-[10px] tracking-widest font-bold rounded transition-colors"
+            >
+              COMPUTE MONTE CARLO VaR
+            </button>
+            
+            {latestVaR && latestVaR.targetNode === node.id && (
+              <div className="mt-3 p-2 bg-[#0a1628] border border-red-900/50 rounded font-mono">
+                <div className="text-red-400 text-[9px] tracking-widest mb-1">P95 VaR (1,024 PATHS)</div>
+                <div className="text-lg font-bold text-red-500 mb-2">
+                  -${(latestVaR.var95 / 1e6).toFixed(2)}M
+                </div>
+            
+                <div className="text-[9px] text-gray-500 tracking-widest">
+                  {latestVaR.pathsRun.toLocaleString()} PATHS · NODE {latestVaR.targetNode}
+                </div>
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

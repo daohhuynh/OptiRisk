@@ -51,8 +51,12 @@ namespace optirisk::compute {
 
 // ── Compile-Time Constants ────────────────────────────────────────
 inline constexpr uint32_t SIMD_WIDTH    = 4;       // 4 doubles per vector (AVX2)
-inline constexpr float    DEFAULT_THRESH = 0.95f;  // Risk threshold for default
-inline constexpr float    CASCADE_FACTOR = 0.3f;   // Contagion attenuation
+inline constexpr float    DEFAULT_THRESH = 0.65f;  // Risk threshold for default
+inline constexpr float    CASCADE_FACTOR = 0.6f;   // Contagion attenuation
+inline constexpr float    RISK_GAIN      = 1.0f;   // 1.0 = NAV-decline-percent feeds risk 1:1
+inline constexpr float    STRESS_THRESH  = 0.40f;  // Above this, neighbors absorb stress
+inline constexpr float    STRESS_FACTOR  = 0.15f;  // How much risk a stressed (non-defaulted) node leaks
+inline constexpr float    QUIESCENCE_EPS = 1e-5f;  // Risk movement below this counts as "no change"
 
 // ── Hardware Cycle Counter ───────────────────────────────────────
 //
@@ -127,7 +131,7 @@ inline void apply_delta_to_array(double* __restrict__ arr,
     // ── AVX2 + FMA3 Path ──────────────────────────────────────────
     //
     // _mm256_set1_pd: broadcast delta to all 4 lanes     [δ,δ,δ,δ]
-    // _mm256_load_pd: aligned load of 4 doubles          [e0,e1,e2,e3]
+    // _mm256_loadu_pd: aligned load of 4 doubles          [e0,e1,e2,e3]
     // _mm256_fmadd_pd(a,b,c) = a*b + c
     //   = [e0,e1,e2,e3] * [δ,δ,δ,δ] + [e0,e1,e2,e3]
     //   = [e0*(1+δ), e1*(1+δ), e2*(1+δ), e3*(1+δ)]
@@ -143,9 +147,9 @@ inline void apply_delta_to_array(double* __restrict__ arr,
         // before we need the data.
         __builtin_prefetch(arr + i + 32, 1, 3);  // write intent, L1 temporal
 
-        __m256d exposure = _mm256_load_pd(arr + i);
+        __m256d exposure = _mm256_loadu_pd(arr + i);
         __m256d result   = _mm256_fmadd_pd(exposure, vdelta, exposure);
-        _mm256_store_pd(arr + i, result);
+        _mm256_storeu_pd(arr + i, result);
     }
 
 #elif defined(OPTIRISK_NEON)
@@ -212,11 +216,11 @@ inline void recompute_nav_simd(optirisk::memory::NodeData& nodes, const uint32_t
         __builtin_prefetch(&nodes.real_estate_exposure[i + 32], 0, 3);
 
         // Load all 5 exposure arrays for 4 nodes each
-        __m256d eq = _mm256_load_pd(&nodes.equities_exposure[i]);
-        __m256d re = _mm256_load_pd(&nodes.real_estate_exposure[i]);
-        __m256d cr = _mm256_load_pd(&nodes.crypto_exposure[i]);
-        __m256d tr = _mm256_load_pd(&nodes.treasuries_exposure[i]);
-        __m256d cb = _mm256_load_pd(&nodes.corp_bonds_exposure[i]);
+        __m256d eq = _mm256_loadu_pd(&nodes.equities_exposure[i]);
+        __m256d re = _mm256_loadu_pd(&nodes.real_estate_exposure[i]);
+        __m256d cr = _mm256_loadu_pd(&nodes.crypto_exposure[i]);
+        __m256d tr = _mm256_loadu_pd(&nodes.treasuries_exposure[i]);
+        __m256d cb = _mm256_loadu_pd(&nodes.corp_bonds_exposure[i]);
 
         // total = eq + re + cr + tr + cb
         //
@@ -235,12 +239,12 @@ inline void recompute_nav_simd(optirisk::memory::NodeData& nodes, const uint32_t
         __m256d total  = _mm256_add_pd(sum_04, sum_23);
 
         // Store total_assets
-        _mm256_store_pd(&nodes.total_assets[i], total);
+        _mm256_storeu_pd(&nodes.total_assets[i], total);
 
         // NAV = total_assets − liabilities
-        __m256d liab = _mm256_load_pd(&nodes.liabilities[i]);
+        __m256d liab = _mm256_loadu_pd(&nodes.liabilities[i]);
         __m256d nav  = _mm256_sub_pd(total, liab);
-        _mm256_store_pd(&nodes.nav[i], nav);
+        _mm256_storeu_pd(&nodes.nav[i], nav);
     }
 
 #elif defined(OPTIRISK_NEON)
@@ -315,42 +319,51 @@ inline void recompute_nav_simd(optirisk::memory::NodeData& nodes, const uint32_t
 //
 
 struct CascadeResult {
-    uint32_t defaults_triggered;  // Nodes that crossed the 0.95 threshold
+    uint32_t defaults_triggered;  // Nodes that crossed the default threshold this call
     uint32_t edges_propagated;    // Total contagion edges fired
+    uint32_t risk_movements;      // Nodes whose risk score changed at all this call
 };
 
 __attribute__((always_inline))
 inline CascadeResult run_cascade(optirisk::memory::CSRGraph& graph,
                                  const double* __restrict__ old_nav,
                                  const uint32_t count) noexcept {
-    CascadeResult result{0, 0};
+    CascadeResult result{0, 0, 0};
 
     for (uint32_t nid = 0; nid < count; ++nid) {
+        // Skip already-defaulted nodes — they neither absorb new risk nor
+        // re-fire contagion (that's handled at first-default).
+        if (graph.nodes.is_defaulted[nid] != 0) continue;
+
         // ── Risk Score Update ─────────────────────────────────────
-        // Based on NAV decline relative to previous tick.
+        // Based on NAV decline relative to PRE-SHOCK NAV. Using the
+        // pre-shock baseline (rather than the previous tick) means a
+        // sustained 30% NAV drop continues to apply pressure round
+        // after round, rather than the system going quiescent the
+        // moment prices stop moving.
         const double prev = old_nav[nid];
         const double curr = graph.nodes.nav[nid];
 
-        if (prev > 1.0) [[likely]] {  // Avoid division by zero
+        if (prev > 1.0) [[likely]] {
             const double decline = prev - curr;
             if (decline > 0.0) {
-                float risk_delta = static_cast<float>(decline / prev) * 0.1f;
-                graph.nodes.risk_score[nid] = std::clamp(
-                    graph.nodes.risk_score[nid] + risk_delta, 0.0f, 1.0f);
+                const float risk_delta = static_cast<float>(decline / prev) * RISK_GAIN;
+                const float old_risk   = graph.nodes.risk_score[nid];
+                const float new_risk   = std::clamp(old_risk + risk_delta, 0.0f, 1.0f);
+                graph.nodes.risk_score[nid] = new_risk;
+                if (std::fabs(new_risk - old_risk) > QUIESCENCE_EPS) ++result.risk_movements;
             }
         }
 
+        const float risk = graph.nodes.risk_score[nid];
+
         // ── Default Detection ─────────────────────────────────────
-        if ((graph.nodes.risk_score[nid] > DEFAULT_THRESH || curr < 0.0) &&
-            graph.nodes.is_defaulted[nid] == 0) [[unlikely]] {
+        if ((risk > DEFAULT_THRESH || curr < 0.0)) [[unlikely]] {
             graph.nodes.is_defaulted[nid] = 1;
-            graph.nodes.risk_score[nid] = 1.0f; // Force risk score to 100%
+            graph.nodes.risk_score[nid] = 1.0f;
             ++result.defaults_triggered;
 
-            // ── CSR Neighbor Propagation ──────────────────────────
             const auto [begin, end] = graph.neighbors(nid);
-
-            // Prefetch edge data for this node
             if (begin < end) {
                 __builtin_prefetch(&graph.edges.col_idx[begin], 0, 3);
                 __builtin_prefetch(&graph.edges.weight[begin],  0, 3);
@@ -358,16 +371,41 @@ inline CascadeResult run_cascade(optirisk::memory::CSRGraph& graph,
 
             for (uint32_t e = begin; e < end; ++e) {
                 const uint32_t neighbor = graph.edges.col_idx[e];
-                const double   debt     = graph.edges.weight[e];
-                const double   neighbor_assets = graph.nodes.total_assets[neighbor] + 1.0;
-
-                // Contagion: debt-weighted risk injection
-                // Higher debt / lower assets → bigger hit
-                float contagion = static_cast<float>(debt / neighbor_assets) * CASCADE_FACTOR;
-                graph.nodes.risk_score[neighbor] = std::clamp(
-                    graph.nodes.risk_score[neighbor] + contagion, 0.0f, 1.0f);
-
+                if (graph.nodes.is_defaulted[neighbor] != 0) continue;
+                const double debt = graph.edges.weight[e];
+                const double neighbor_assets = graph.nodes.total_assets[neighbor] + 1.0;
+                const float contagion = static_cast<float>(debt / neighbor_assets) * CASCADE_FACTOR;
+                const float old_n = graph.nodes.risk_score[neighbor];
+                const float new_n = std::clamp(old_n + contagion, 0.0f, 1.0f);
+                graph.nodes.risk_score[neighbor] = new_n;
+                if (std::fabs(new_n - old_n) > QUIESCENCE_EPS) ++result.risk_movements;
                 ++result.edges_propagated;
+            }
+        }
+        // ── Stress Contagion ─────────────────────────────────────
+        // Non-defaulted but heavily stressed nodes still leak risk to
+        // their counterparties, just at a reduced rate. This is what
+        // keeps the cascade ticking past the initial shock — a -30%
+        // hit may not break any firm in round 0, but the resulting
+        // ~0.5 risk scores propagate over a few rounds and eventually
+        // push the most-leveraged firms over the line.
+        else if (risk > STRESS_THRESH) {
+            const auto [begin, end] = graph.neighbors(nid);
+            for (uint32_t e = begin; e < end; ++e) {
+                const uint32_t neighbor = graph.edges.col_idx[e];
+                if (graph.nodes.is_defaulted[neighbor] != 0) continue;
+                const double debt = graph.edges.weight[e];
+                const double neighbor_assets = graph.nodes.total_assets[neighbor] + 1.0;
+                const float leak = static_cast<float>(debt / neighbor_assets)
+                                   * STRESS_FACTOR * (risk - STRESS_THRESH);
+                if (leak <= QUIESCENCE_EPS) continue;
+                const float old_n = graph.nodes.risk_score[neighbor];
+                const float new_n = std::clamp(old_n + leak, 0.0f, 1.0f);
+                graph.nodes.risk_score[neighbor] = new_n;
+                if (std::fabs(new_n - old_n) > QUIESCENCE_EPS) {
+                    ++result.risk_movements;
+                    ++result.edges_propagated;
+                }
             }
         }
     }
@@ -412,8 +450,8 @@ inline TickResult apply_shock_simd(optirisk::memory::CSRGraph& graph,
 #if defined(OPTIRISK_AVX2)
     // SIMD copy: 4 doubles per iteration
     for (uint32_t i = 0; i < N; i += SIMD_WIDTH) {
-        __m256d v = _mm256_load_pd(&graph.nodes.nav[i]);
-        _mm256_store_pd(&old_nav[i], v);
+        __m256d v = _mm256_loadu_pd(&graph.nodes.nav[i]);
+        _mm256_storeu_pd(&old_nav[i], v);
     }
 #elif defined(OPTIRISK_NEON)
     for (uint32_t i = 0; i < N; i += SIMD_WIDTH) {

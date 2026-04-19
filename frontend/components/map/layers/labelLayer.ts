@@ -97,8 +97,11 @@ export function buildLabelLayer(opts: LabelLayerOptions): TextLayer<LabelDatum> 
     ? buildFocusLabels(nodes, isLit, anchorId)
     : nodes
         .filter((n) => {
+          // Defaulted / critical firms are signalled visually by their red
+          // node + edges; we deliberately suppress their labels so the map
+          // stays legible during a cascade. The hero firm always shows.
+          if (n.state === 'defaulted' || n.state === 'critical') return false;
           if (n.isHeroFirm) return true;
-          if (n.state === 'defaulted' || n.state === 'critical') return true;
           if (zoom >= 5) return true;
           if (zoom >= 4) return n.nav > 5e8;
           if (zoom >= 3) return n.nav > 2e9;

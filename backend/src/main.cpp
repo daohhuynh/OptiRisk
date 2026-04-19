@@ -12,6 +12,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cmath>
+#include <array>
+#include <algorithm>
 #include <thread>
 #include <chrono>
 #include <random>
@@ -30,6 +33,13 @@
 #include "compute/monte_carlo.hpp"
 
 uint32_t HERO_FIRM_ID = 0;
+
+// Forward declarations
+static void load_market_binary(optirisk::memory::CSRGraph& graph);
+
+// Magic shock_type values that aren't real market shocks but control signals.
+// Keep in sync with frontend wsService.sendReset().
+constexpr uint32_t SHOCK_TYPE_RESET = 0xFF;
 
 // ── Global Shutdown Flag ───────────────────────────────────────────
 static std::atomic<bool> g_running{true};
@@ -52,8 +62,16 @@ static void network_thread(optirisk::concurrency::DisruptorEngine& engine,
 
 // ── Thread 2: Compute (Risk Cascade & VaR Engine) ──────────────────
 //
-// Reads ShockPayloads from shock_ring, runs the deep Cascade 
-// physics loop involving the CLOB, then broadcasts.
+// Reads ShockPayloads from shock_ring, runs the deep Cascade
+// physics loop involving the CLOB, then broadcasts ONE TickDelta per
+// node whose state materially changed. This is what makes the cascade
+// visible on the frontend map — without per-node deltas, the user
+// only ever sees the hero firm and contagion is invisible.
+//
+// Quiescence model:
+//   run_cascade_tick() already loops internally up to MAX_CASCADE_ROUNDS
+//   and bails as soon as a round produces no new defaults. We just
+//   compare pre/post snapshots and broadcast every node that moved.
 //
 static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
                            optirisk::memory::CSRGraph& graph,
@@ -64,6 +82,14 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
 
     uint64_t read_seq = 0;
     uint32_t tick_counter = 0;
+
+    // Pre/post snapshots — stack-resident, zero heap.
+    alignas(64) std::array<uint8_t, optirisk::memory::MAX_NODES> pre_defaulted{};
+    alignas(64) std::array<float,   optirisk::memory::MAX_NODES> pre_risk{};
+    alignas(64) std::array<double,  optirisk::memory::MAX_NODES> pre_nav{};
+    alignas(64) std::array<double,  optirisk::memory::MAX_NODES> pre_assets{};
+
+    constexpr float RISK_REPORT_EPSILON = 0.005f; // ~0.5% movement threshold
 
     while (g_running.load(std::memory_order_relaxed)) [[likely]] {
         if (!engine.shock_ring.available(read_seq)) [[unlikely]] {
@@ -76,45 +102,147 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
         }
 
         const auto& shock = engine.shock_ring.get(read_seq);
+        const uint32_t N = graph.num_nodes;
+
+        // ── RESET PATH ──────────────────────────────────────────────
+        // Frontend pressed RESET. Reload baseline graph state and emit
+        // a TickDelta for every node so the map repaints to "healthy".
+        if (shock.shock_type == SHOCK_TYPE_RESET) {
+            std::printf("[compute] tick=%u RESET received, reloading baseline\n",
+                        tick_counter);
+            std::fflush(stdout);
+
+            load_market_binary(graph);
+            const uint32_t this_tick = tick_counter++;
+
+            for (uint32_t i = 0; i < graph.num_nodes; ++i) {
+                auto tick_seq = engine.tick_ring.claim(engine.broadcast_cursor, g_running);
+                if (tick_seq == UINT64_MAX) [[unlikely]] break;
+                auto& tick = engine.tick_ring.get(tick_seq);
+
+                tick.node_id        = i;
+                tick.risk_score     = graph.nodes.risk_score[i];
+                tick.nav            = graph.nodes.nav[i];
+                tick.exposure_total = graph.nodes.total_assets[i];
+                tick.delta_nav      = 0.0;
+                tick.delta_exposure = 0.0;
+                tick.is_defaulted   = (graph.nodes.is_defaulted[i] != 0) ? 1 : 0;
+                tick.hub_id         = static_cast<uint8_t>(graph.nodes.hub_id[i]);
+                tick.cascade_depth  = 0;
+                tick.tick_seq       = this_tick;
+                tick.compute_cycles = 0;
+
+                engine.tick_ring.publish(tick_seq);
+            }
+
+            ++read_seq;
+            engine.compute_cursor.value.store(read_seq, std::memory_order_release);
+            ++engine.compute_count;
+            continue;
+        }
+
+        std::printf("[compute] tick=%u shock recv'd, starting MC\n", tick_counter);
+        std::fflush(stdout);
 
         // 1. VaR Monte Carlo (for the Hero firm)
         const auto var_result = optirisk::compute::run_monte_carlo_var(graph, shock);
 
-        // Print VaR for monitoring (production would route this via a dedicated queue)
+        std::printf("[compute] tick=%u MC done, expected=%.2f var_95=%.2f\n",
+                    tick_counter,
+                    var_result.expected[HERO_FIRM_ID],
+                    var_result.var_95[HERO_FIRM_ID]);
+        std::fflush(stdout);
+
         if (tick_counter % 100 == 0) {
             std::printf("[var] Node %u | Expected Loss: $%.2f | P95 VaR: $%.2f\n",
-                        HERO_FIRM_ID, var_result.expected[HERO_FIRM_ID], var_result.var_95[HERO_FIRM_ID]);
-                        
+                        HERO_FIRM_ID,
+                        var_result.expected[HERO_FIRM_ID],
+                        var_result.var_95[HERO_FIRM_ID]);
+            std::fflush(stdout);
+
             optirisk::network::VaRReport var_rep{};
             var_rep.target_node = HERO_FIRM_ID;
-            var_rep.paths_run = var_result.paths_run;
-            var_rep.var_95 = var_result.var_95[HERO_FIRM_ID];
-            udp.broadcast_var(var_rep); // Blast UDP directly from compute loop
+            var_rep.paths_run   = var_result.paths_run;
+            var_rep.var_95      = var_result.var_95[HERO_FIRM_ID];
+            udp.broadcast_var(var_rep);
+            std::printf("[compute] tick=%u udp var sent\n", tick_counter);
+            std::fflush(stdout);
         }
 
-        // 2. Cascade Physics Loop 
+        // 2. Snapshot pre-cascade state so we can emit per-node diffs.
+        for (uint32_t i = 0; i < N; ++i) {
+            pre_defaulted[i] = graph.nodes.is_defaulted[i];
+            pre_risk[i]      = graph.nodes.risk_score[i];
+            pre_nav[i]       = graph.nodes.nav[i];
+            pre_assets[i]    = graph.nodes.total_assets[i];
+        }
+
+        std::printf("[compute] tick=%u snapshot done, starting cascade\n", tick_counter);
+        std::fflush(stdout);
+
+        // 3. Run the cascade until equilibrium (or MAX_CASCADE_ROUNDS).
         const auto stats = optirisk::compute::run_cascade_tick(clob, graph, options, shock);
 
-        // Publish TickDelta for Hero Firm as summary (and potentially all defaults in a real setup)
-        auto tick_seq = engine.tick_ring.claim(engine.broadcast_cursor, g_running);
-        if (tick_seq == UINT64_MAX) [[unlikely]] break;
-        auto& tick = engine.tick_ring.get(tick_seq);
+        std::printf("[compute] tick=%u cascade done, rounds=%u defaults=%u\n",
+                    tick_counter, stats.rounds, stats.total_defaults);
+        std::fflush(stdout);
 
-        tick.node_id        = HERO_FIRM_ID;
-        tick.risk_score     = graph.nodes.risk_score[HERO_FIRM_ID];
-        tick.nav            = graph.nodes.nav[HERO_FIRM_ID];
-        tick.exposure_total = graph.nodes.total_assets[HERO_FIRM_ID];
-        tick.delta_nav      = 0.0;
-        tick.delta_exposure = 0.0;
-        tick.is_defaulted   = graph.nodes.is_defaulted[HERO_FIRM_ID];
-        tick.hub_id         = static_cast<uint8_t>(graph.nodes.hub_id[HERO_FIRM_ID]);
-        tick.cascade_depth  = static_cast<uint8_t>(std::min(stats.total_defaults, 255u));
-        tick.tick_seq       = tick_counter++;
-        tick.compute_cycles = stats.compute_cycles;  // From the cascade engine
+        const uint32_t this_tick = tick_counter++;
+        uint32_t broadcast_count = 0;
 
-        engine.tick_ring.publish(tick_seq);
+        // 4. Per-node TickDelta broadcast. This is the loop that paints the
+        //    map: every node whose risk score moved enough, or whose default
+        //    flag flipped, gets its own message. The frontend applies them
+        //    in order so the user sees the contagion ripple outward.
+        for (uint32_t i = 0; i < N; ++i) {
+            const uint8_t  new_def  = graph.nodes.is_defaulted[i];
+            const uint8_t  was_def  = pre_defaulted[i];
+            const float    new_risk = graph.nodes.risk_score[i];
+            const float    risk_d   = new_risk - pre_risk[i];
 
-        // Cascade finished. Swap the BBO double buffer exposing the inactive queue to the broadcast thread.
+            const bool flipped_default = (was_def == 0) && (new_def != 0);
+            const bool risk_moved      = std::fabs(risk_d) >= RISK_REPORT_EPSILON;
+            const bool is_hero         = (i == HERO_FIRM_ID);
+
+            if (!flipped_default && !risk_moved && !is_hero) continue;
+
+            auto tick_seq = engine.tick_ring.claim(engine.broadcast_cursor, g_running);
+            if (tick_seq == UINT64_MAX) [[unlikely]] break;
+            auto& tick = engine.tick_ring.get(tick_seq);
+
+            tick.node_id        = i;
+            tick.risk_score     = new_risk;
+            tick.nav            = graph.nodes.nav[i];
+            tick.exposure_total = graph.nodes.total_assets[i];
+            tick.delta_nav      = graph.nodes.nav[i]          - pre_nav[i];
+            tick.delta_exposure = graph.nodes.total_assets[i] - pre_assets[i];
+            // Frontend decoder treats `is_defaulted == 1` as defaulted; the
+            // C++ cascade state machine ends at value 2 (queued for liquidation),
+            // so canonicalise here.
+            tick.is_defaulted   = (new_def != 0) ? 1 : 0;
+            tick.hub_id         = static_cast<uint8_t>(graph.nodes.hub_id[i]);
+            // Any non-zero cascade_depth flips the frontend phase from
+            // "shock_triggered" to "cascade_running". We don't have a real
+            // BFS depth here, so we report total cascade rounds (capped).
+            tick.cascade_depth  = static_cast<uint8_t>(std::min(stats.rounds, 255u));
+            tick.tick_seq       = this_tick;
+            tick.compute_cycles = stats.compute_cycles;
+
+            engine.tick_ring.publish(tick_seq);
+            ++broadcast_count;
+        }
+
+        if (stats.total_defaults > 0 || broadcast_count > 0) {
+            std::printf("[cascade] tick=%u rounds=%u defaults=%u liquidations=%u "
+                        "slippage=%.4f bcast=%u cycles=%llu\n",
+                        this_tick, stats.rounds, stats.total_defaults,
+                        stats.total_liquidations, stats.total_slippage,
+                        broadcast_count,
+                        static_cast<unsigned long long>(stats.compute_cycles));
+        }
+
+        // Cascade finished. Swap the BBO double buffer exposing the inactive
+        // queue to the broadcast thread.
         clob.flip_buffers();
 
         ++read_seq;

@@ -56,32 +56,37 @@ enum class HubId : uint8_t {
 // accumulation error on sums across 500 Pareto-distributed values
 // that span $100M to $10B+.
 //
+// IMPORTANT: every `double` array below is individually `alignas(64)` so the
+// AVX2 hot loops in monte_carlo.hpp / simd_engine.hpp can use 32-byte aligned
+// loads/stores (vmovapd) safely. Without per-field alignas, the compiler
+// silently promotes loadu to vmovapd at -O3 based on its alignment analysis
+// of the surrounding struct, which leads to a SIGSEGV on the first SIMD load.
 struct alignas(64) NodeData {
     // ── Risk State (hot — touched every tick) ─────────────────────
-    std::array<float,    MAX_NODES> risk_score{};        // Current risk ∈ [0.0, 1.0]
-    std::array<uint8_t,  MAX_NODES> is_defaulted{};      // 1 = defaulted, 0 = alive
-    std::array<uint8_t,  MAX_NODES> is_hero_firm{};      // 1 = user-controlled entity
+    alignas(64) std::array<float,    MAX_NODES> risk_score{};        // Current risk ∈ [0.0, 1.0]
+    alignas(64) std::array<uint8_t,  MAX_NODES> is_defaulted{};      // 1 = defaulted, 0 = alive
+    alignas(64) std::array<uint8_t,  MAX_NODES> is_hero_firm{};      // 1 = user-controlled entity
 
     // ── Portfolio Exposures (Dirichlet-allocated, warm path) ──────
-    std::array<double,   MAX_NODES> equities_exposure{};  // SPY-anchored
-    std::array<double,   MAX_NODES> real_estate_exposure{};// VNQ-anchored
-    std::array<double,   MAX_NODES> crypto_exposure{};    // BTC-anchored
-    std::array<double,   MAX_NODES> treasuries_exposure{}; // TLT-anchored
-    std::array<double,   MAX_NODES> corp_bonds_exposure{}; // LQD-anchored
+    alignas(64) std::array<double,   MAX_NODES> equities_exposure{};   // SPY-anchored
+    alignas(64) std::array<double,   MAX_NODES> real_estate_exposure{};// VNQ-anchored
+    alignas(64) std::array<double,   MAX_NODES> crypto_exposure{};     // BTC-anchored
+    alignas(64) std::array<double,   MAX_NODES> treasuries_exposure{}; // TLT-anchored
+    alignas(64) std::array<double,   MAX_NODES> corp_bonds_exposure{}; // LQD-anchored
 
     // ── Balance Sheet (warm path) ────────────────────────────────
-    std::array<double,   MAX_NODES> total_assets{};       // Pareto-distributed
-    std::array<double,   MAX_NODES> liabilities{};        // Sum of outgoing debt edges
-    std::array<double,   MAX_NODES> nav{};                // total_assets − liabilities
+    alignas(64) std::array<double,   MAX_NODES> total_assets{};       // Pareto-distributed
+    alignas(64) std::array<double,   MAX_NODES> liabilities{};        // Sum of outgoing debt edges
+    alignas(64) std::array<double,   MAX_NODES> nav{};                // total_assets − liabilities
 
     // ── Credit & Classification (cold path — read during cascade) ─
-    std::array<float,    MAX_NODES> credit_rating{};      // Synthetic credit score
-    std::array<uint32_t, MAX_NODES> sector_id{};          // Sector classification
+    alignas(64) std::array<float,    MAX_NODES> credit_rating{};      // Synthetic credit score
+    alignas(64) std::array<uint32_t, MAX_NODES> sector_id{};          // Sector classification
 
     // ── Geospatial (cold path — used for frontend viz only) ──────
-    std::array<float,    MAX_NODES> latitude{};
-    std::array<float,    MAX_NODES> longitude{};
-    std::array<HubId,    MAX_NODES> hub_id{};
+    alignas(64) std::array<float,    MAX_NODES> latitude{};
+    alignas(64) std::array<float,    MAX_NODES> longitude{};
+    alignas(64) std::array<HubId,    MAX_NODES> hub_id{};
 };
 
 // ── CSR Edge Storage ───────────────────────────────────────────────

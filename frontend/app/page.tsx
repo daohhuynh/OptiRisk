@@ -7,10 +7,21 @@ import CityHubPanel from '@/components/panels/CityHubPanel';
 import StatusBar from '@/components/panels/StatusBar';
 import ChatPanel from '@/components/chat/ChatPanel';
 import { useUIStore } from '@/store/uiStore';
+import { useEffect } from 'react';
+import { wsService } from '@/services/websocket';
 
+// Dynamic imports must live OUTSIDE the component
 const MapContainer = dynamic(() => import('@/components/map/MapContainer'), { ssr: false });
 
 export default function Home() {
+  
+  // [THE IGNITION SWITCH]
+  // Must live INSIDE the component, before the return statement
+  useEffect(() => {
+    wsService.start();
+    return () => wsService.stop(); // Clean up if the component unmounts
+  }, []);
+
   const selectedCityName = useUIStore(s => s.selectedCityName);
 
   return (

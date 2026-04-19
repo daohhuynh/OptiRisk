@@ -14,6 +14,7 @@ interface GraphState {
   loadSnapshot: (nodes: GraphNode[], edges: GraphEdge[]) => void;
   applyTickDelta: (msg: TickDeltaMsg) => void;
   clearChangedNodes: () => void;
+  resetAllNodeStates: () => void;
 }
 
 export const useGraphStore = create<GraphState>((set, get) => ({
@@ -70,4 +71,23 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   clearChangedNodes: () => set({ changedNodeIds: new Set() }),
+
+  resetAllNodeStates: () => {
+    const { nodes } = get();
+    const cleared = new Map<number, GraphNode>();
+    for (const [id, n] of nodes) {
+      cleared.set(id, {
+        ...n,
+        riskScore: 0,
+        isDefaulted: false,
+        cascadeDepth: 0,
+        state: getNodeState(0, false),
+      });
+    }
+    set({
+      nodes: cleared,
+      changedNodeIds: new Set(),
+      defaultedNodeIds: new Set(),
+    });
+  },
 }));

@@ -19,7 +19,11 @@
 
 namespace optirisk::compute {
 
-inline constexpr uint32_t MAX_CASCADE_ROUNDS = 20;
+// Upper bound on cascade rounds before we declare equilibrium. Deliberately
+// generous: an 80% crypto crash with slippage feedback can run > 100 rounds
+// before quiescence. The loop also bails early as soon as a round produces
+// no new defaults, so this is just a safety cap, not the steady-state cost.
+inline constexpr uint32_t MAX_CASCADE_ROUNDS = 1024;
 
 struct CascadeStats {
     uint32_t rounds;
@@ -51,8 +55,13 @@ inline CascadeStats run_cascade_tick(
     clob.books[3].apply_macro_shock(shock.treasuries_delta);
     clob.books[4].apply_macro_shock(shock.corp_bonds_delta);
 
-    bool newly_defaulted = true;
+    // Loop continues as long as the system is still moving — either a new
+    // default fired this round, OR a non-defaulted node's risk score moved
+    // (stress contagion is still propagating). If neither is true the system
+    // has reached its post-shock equilibrium and further iteration is wasted.
+    bool keep_iterating = true;
     uint32_t current_round = 0;
+    uint32_t total_risk_movements = 0;
 
     // Buffer to hold newly defaulted nodes to liquidate next round.
     // Zero allocation: stacked array exactly sized for the worst case.
@@ -65,8 +74,8 @@ inline CascadeStats run_cascade_tick(
     clob.get_write_buffer(&bbo_buf, &bbo_count);
 
     // 2. Cascade Loop
-    while (newly_defaulted && current_round < MAX_CASCADE_ROUNDS) {
-        newly_defaulted = false;
+    while (keep_iterating && current_round < MAX_CASCADE_ROUNDS) {
+        keep_iterating = false;
 
         // Step A: Mark-to-Market (SIMD)
         // Note: apply_shock_simd() here acts as a general delta-updater if we convert it.
@@ -131,8 +140,13 @@ inline CascadeStats run_cascade_tick(
         // STEP A.2: Linear Mark-to-Market (SIMD)
         // apply_shock_simd updates risk and defaults, returning new defaults count.
         auto tick_result = apply_shock_simd(graph, (current_round == 0) ? shock : iteration_shock);
-        
-        stats.total_defaults += tick_result.cascade.defaults_triggered;
+
+        stats.total_defaults  += tick_result.cascade.defaults_triggered;
+        total_risk_movements  += tick_result.cascade.risk_movements;
+        if (tick_result.cascade.risk_movements > 0 ||
+            tick_result.cascade.defaults_triggered > 0) {
+            keep_iterating = true;
+        }
 
         // Collect newly defaulted nodes queue
         for (uint32_t i = 0; i < graph.num_nodes; ++i) {
@@ -144,8 +158,8 @@ inline CascadeStats run_cascade_tick(
         }
 
         if (liquidations_queued > 0) {
-            newly_defaulted = true;
-            
+            keep_iterating = true;
+
             // Step B: Liquidate
             for (uint32_t q = 0; q < liquidations_queued; ++q) {
                 uint32_t target_node = liquidation_queue[q];
@@ -194,6 +208,7 @@ inline CascadeStats run_cascade_tick(
     }
 
     stats.rounds = current_round;
+    (void)total_risk_movements; // tracked for future telemetry
     const uint64_t end_cycles = read_cycles();
     stats.compute_cycles = (end_cycles > start_cycles) ? (end_cycles - start_cycles) : 0;
 

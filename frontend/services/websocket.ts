@@ -34,10 +34,35 @@ class WebSocketService {
     useConnectionStore.getState().setStatus('disconnected');
   }
 
-  sendBinary(buf: ArrayBuffer) {
+  sendBinary(buf: ArrayBuffer): boolean {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(buf);
+      return true;
     }
+    return false;
+  }
+
+  // Cascade-branch parity: best-effort flush of any in-flight messages so the
+  // RESET button returns a perfectly clean slate. The current binary
+  // protocol is one-shot per send so there's nothing buffered locally; the
+  // method exists for API compatibility.
+  clearPendingTicks(): void {
+    /* no-op — kept for symmetry with cascade branch */
+  }
+
+  // Fire-and-forget RESET: tells the backend to reload baseline state and
+  // also clears local frontend visuals immediately. Uses a magic shock_type
+  // of 0xFF that the backend's compute thread interprets as "reset".
+  sendReset(): boolean {
+    const buf = new ArrayBuffer(60);
+    const v = new DataView(buf);
+    v.setUint8(0, 0x01);                  // MsgType.ShockPayload
+    v.setUint8(1, 0);
+    v.setUint16(2, 56, true);             // payload_len
+    v.setUint32(4, 0xFFFFFFFF, true);     // target_node = ALL
+    v.setUint32(8, 0xFF, true);           // shock_type = MAGIC RESET
+    v.setBigUint64(52, BigInt(Date.now()) * 1_000_000n, true);
+    return this.sendBinary(buf);
   }
 
   private connect() {

@@ -107,25 +107,25 @@ inline VaRResult run_monte_carlo_var(
         const __m256d v_cb_d = _mm256_set1_pd(cb_d);
 
         for (uint32_t i = 0; i < vec_end; i += 4) {
-            __m256d eq = _mm256_load_pd(&nodes.equities_exposure[i]);
-            __m256d re = _mm256_load_pd(&nodes.real_estate_exposure[i]);
-            __m256d cr = _mm256_load_pd(&nodes.crypto_exposure[i]);
-            __m256d tr = _mm256_load_pd(&nodes.treasuries_exposure[i]);
-            __m256d cb = _mm256_load_pd(&nodes.corp_bonds_exposure[i]);
+            __m256d eq = _mm256_loadu_pd(&nodes.equities_exposure[i]);
+            __m256d re = _mm256_loadu_pd(&nodes.real_estate_exposure[i]);
+            __m256d cr = _mm256_loadu_pd(&nodes.crypto_exposure[i]);
+            __m256d tr = _mm256_loadu_pd(&nodes.treasuries_exposure[i]);
+            __m256d cb = _mm256_loadu_pd(&nodes.corp_bonds_exposure[i]);
 
             __m256d sum_01 = _mm256_add_pd(_mm256_mul_pd(eq, v_eq_d), _mm256_mul_pd(re, v_re_d));
             __m256d sum_23 = _mm256_add_pd(_mm256_mul_pd(cr, v_cr_d), _mm256_mul_pd(tr, v_tr_d));
             __m256d sum_04 = _mm256_add_pd(sum_01, _mm256_mul_pd(cb, v_cb_d));
             __m256d total  = _mm256_add_pd(sum_04, sum_23);
 
-            __m256d liab = _mm256_load_pd(&nodes.liabilities[i]);
+            __m256d liab = _mm256_loadu_pd(&nodes.liabilities[i]);
             __m256d new_nav = _mm256_sub_pd(total, liab);
 
-            __m256d old_nav = _mm256_load_pd(&nodes.nav[i]);
+            __m256d old_nav = _mm256_loadu_pd(&nodes.nav[i]);
             __m256d nav_drop = _mm256_sub_pd(old_nav, new_nav); // Positive = a loss
 
             alignas(32) double drops[4];
-            _mm256_store_pd(drops, nav_drop);
+            _mm256_storeu_pd(drops, nav_drop);
 
             #pragma GCC unroll 4
             for (int k=0; k<4; ++k) {

@@ -175,38 +175,60 @@ public:
             }
         });
 
-        app_ = &app;
+        // Capture the loop pointer so other threads can defer publishes onto
+        // it. uWS::App::publish() is NOT thread-safe — it must be invoked
+        // from the loop thread or it will silently corrupt the per-socket
+        // backpressure buffers and tear down connections at random.
+        loop_ = uWS::Loop::get();
+        app_  = &app;
         app.run();
-        app_ = nullptr;
+        app_  = nullptr;
+        loop_ = nullptr;
     }
 
     // ── Broadcast a TickDelta to all connected clients ────────────
-    // Called from the publisher thread after reading from the
-    // Disruptor ring. Zero-copy: we pass the raw bytes directly
-    // to uWS::publish() which handles framing.
+    // Called from the publisher thread. We serialize into a small heap
+    // buffer (60 bytes) and defer the actual publish onto the uWS event
+    // loop — uWS internals are single-threaded.
     void broadcast_tick(const TickDelta& tick) {
-        // Serialize into a stack buffer (no heap)
-        uint8_t buf[sizeof(MessageHeader) + sizeof(TickDelta)];
-        const std::size_t n = serialize_tick(tick, buf, sizeof(buf));
+        if (!loop_ || !app_) [[unlikely]] return;
 
-        if (n > 0 && app_) [[likely]] {
-            app_->publish("tick",
-                         std::string_view(reinterpret_cast<const char*>(buf), n),
-                         uWS::BINARY);
-        }
+        constexpr std::size_t TOTAL = sizeof(MessageHeader) + sizeof(TickDelta);
+        auto* bytes = new uint8_t[TOTAL];
+        const std::size_t n = serialize_tick(tick, bytes, TOTAL);
+        if (n == 0) { delete[] bytes; return; }
+
+        loop_->defer([this, bytes, n]() {
+            if (app_) {
+                app_->publish("tick",
+                             std::string_view(reinterpret_cast<const char*>(bytes), n),
+                             uWS::BINARY);
+            }
+            delete[] bytes;
+        });
     }
 
     // ── Broadcast a VaRReport to all connected clients ────────────
     void broadcast_var(const VaRReport& report) {
-        struct { MessageHeader hdr; VaRReport payload; } __attribute__((packed)) buf;
-        buf.hdr.msg_type = MsgType::VaRReport;
-        buf.payload = report;
+        if (!loop_ || !app_) [[unlikely]] return;
 
-        if (app_) [[likely]] {
-            app_->publish("tick",
-                         std::string_view(reinterpret_cast<const char*>(&buf), sizeof(buf)),
-                         uWS::BINARY);
-        }
+        constexpr std::size_t TOTAL = sizeof(MessageHeader) + sizeof(VaRReport);
+        auto* bytes = new uint8_t[TOTAL];
+
+        MessageHeader hdr{};
+        hdr.msg_type    = MsgType::VaRReport;
+        hdr.payload_len = sizeof(VaRReport);
+        std::memcpy(bytes, &hdr, sizeof(MessageHeader));
+        std::memcpy(bytes + sizeof(MessageHeader), &report, sizeof(VaRReport));
+
+        loop_->defer([this, bytes]() {
+            if (app_) {
+                app_->publish("tick",
+                             std::string_view(reinterpret_cast<const char*>(bytes), TOTAL),
+                             uWS::BINARY);
+            }
+            delete[] bytes;
+        });
     }
 
     // ── Graceful shutdown (called from signal handler thread) ─────
@@ -226,6 +248,7 @@ private:
     ShockCallback    on_shock_;
     us_listen_socket_t* listen_socket_ = nullptr;
     uWS::App*        app_             = nullptr;
+    uWS::Loop*       loop_            = nullptr; // owned by the network thread
     uint32_t         next_client_id_  = 0;
     uint32_t         active_connections_ = 0;
 };
