@@ -23,6 +23,7 @@
 #include <cstring>
 #include <cstdint>
 #include <functional>
+#include <atomic>
 
 // uWebSockets header — pulls in the full single-header amalgam
 // Suppress C++23 deprecation of std::aligned_storage_t in their MoveOnlyFunction.h
@@ -77,7 +78,7 @@ public:
             .compression     = uWS::DISABLED,         // No per-message deflate — pure binary
             .maxPayloadLength = 256,                   // ShockPayload is 56 bytes; leave headroom
             .idleTimeout      = 120,                   // 2 min keepalive
-            .maxBackpressure  = 1024 * 1024,           // 1 MB backpressure limit
+            .maxBackpressure  = 8 * 1024 * 1024,       // tolerate bursts; publish still drops if saturated
 
             // ── Open Handler ──────────────────────────────────────
             .open = [this](auto* ws) {
@@ -108,6 +109,16 @@ public:
                 // Validate minimum size: MessageHeader + ShockPayload
                 const auto* raw = reinterpret_cast<const uint8_t*>(message.data());
                 const std::size_t len = message.size();
+                std::printf("[ws] RX frame len=%zu raw=%02X %02X %02X %02X %02X %02X %02X %02X\n",
+                            len,
+                            len > 0 ? raw[0] : 0,
+                            len > 1 ? raw[1] : 0,
+                            len > 2 ? raw[2] : 0,
+                            len > 3 ? raw[3] : 0,
+                            len > 4 ? raw[4] : 0,
+                            len > 5 ? raw[5] : 0,
+                            len > 6 ? raw[6] : 0,
+                            len > 7 ? raw[7] : 0);
 
                 // ── Parse with or without MessageHeader prefix ────
                 // Accept both raw ShockPayload (56 bytes) and
@@ -121,6 +132,9 @@ public:
                     // Header-prefixed
                     MessageHeader hdr{};
                     std::memcpy(&hdr, raw, sizeof(MessageHeader));
+                    std::printf("[ws] HDR type=0x%02X payload_len=%u\n",
+                                static_cast<unsigned>(hdr.msg_type),
+                                static_cast<unsigned>(hdr.payload_len));
 
                     if (hdr.msg_type != MsgType::ShockPayload) [[unlikely]] {
                         std::printf("[ws] ERROR: unexpected msg_type=0x%02X from client %u\n",
@@ -175,59 +189,70 @@ public:
             }
         });
 
-        // Capture the loop pointer so other threads can defer publishes onto
-        // it. uWS::App::publish() is NOT thread-safe — it must be invoked
-        // from the loop thread or it will silently corrupt the per-socket
-        // backpressure buffers and tear down connections at random.
         loop_ = uWS::Loop::get();
-        app_  = &app;
+        app_ = &app;
         app.run();
-        app_  = nullptr;
+        app_ = nullptr;
         loop_ = nullptr;
     }
 
     // ── Broadcast a TickDelta to all connected clients ────────────
-    // Called from the publisher thread. We serialize into a small heap
-    // buffer (60 bytes) and defer the actual publish onto the uWS event
-    // loop — uWS internals are single-threaded.
+    // Called from the publisher thread after reading from the
+    // Disruptor ring. Zero-copy: we pass the raw bytes directly
+    // to uWS::publish() which handles framing.
+    //
+    // Non-blocking publish: if client is saturated, drop this frame and continue.
+    // This implements the Ultra-Low-Latency principle: prioritize latest state
+    // over every incremental update. Dropped frames are tracked via telemetry
+    // counter without interrupting the compute thread's internal state calculations.
     void broadcast_tick(const TickDelta& tick) {
-        if (!loop_ || !app_) [[unlikely]] return;
+        auto* loop = loop_;
+        if (!loop) [[unlikely]] {
+            dropped_tick_frames_.fetch_add(1, std::memory_order_relaxed);
+            return;
+        }
 
-        constexpr std::size_t TOTAL = sizeof(MessageHeader) + sizeof(TickDelta);
-        auto* bytes = new uint8_t[TOTAL];
-        const std::size_t n = serialize_tick(tick, bytes, TOTAL);
-        if (n == 0) { delete[] bytes; return; }
+        loop->defer([this, tick]() {
+            uint8_t buf[sizeof(MessageHeader) + sizeof(TickDelta)];
+            const std::size_t n = serialize_tick(tick, buf, sizeof(buf));
 
-        loop_->defer([this, bytes, n]() {
-            if (app_) {
-                app_->publish("tick",
-                             std::string_view(reinterpret_cast<const char*>(bytes), n),
-                             uWS::BINARY);
+            if (n > 0 && app_) [[likely]] {
+                // Non-blocking publish: if client is saturated, drop this frame and continue
+                const bool ok = app_->publish("tick",
+                                              std::string_view(reinterpret_cast<const char*>(buf), n),
+                                              uWS::BINARY);
+                if (!ok) [[unlikely]] {
+                    dropped_tick_frames_.fetch_add(1, std::memory_order_relaxed);
+                }
             }
-            delete[] bytes;
         });
     }
 
     // ── Broadcast a VaRReport to all connected clients ────────────
+    // Non-blocking publish: if client is saturated, drop this frame and continue.
     void broadcast_var(const VaRReport& report) {
-        if (!loop_ || !app_) [[unlikely]] return;
+        auto* loop = loop_;
+        if (!loop) [[unlikely]] {
+            dropped_tick_frames_.fetch_add(1, std::memory_order_relaxed);
+            return;
+        }
 
-        constexpr std::size_t TOTAL = sizeof(MessageHeader) + sizeof(VaRReport);
-        auto* bytes = new uint8_t[TOTAL];
+        loop->defer([this, report]() {
+            struct { MessageHeader hdr; VaRReport payload; } __attribute__((packed)) buf;
+            buf.hdr.msg_type = MsgType::VaRReport;
+            buf.hdr._reserved = 0;
+            buf.hdr.payload_len = sizeof(VaRReport);
+            buf.payload = report;
 
-        MessageHeader hdr{};
-        hdr.msg_type    = MsgType::VaRReport;
-        hdr.payload_len = sizeof(VaRReport);
-        std::memcpy(bytes, &hdr, sizeof(MessageHeader));
-        std::memcpy(bytes + sizeof(MessageHeader), &report, sizeof(VaRReport));
-
-        loop_->defer([this, bytes]() {
-            if (app_) {
-                app_->publish("tick",
-                             std::string_view(reinterpret_cast<const char*>(bytes), TOTAL),
-                             uWS::BINARY);
+            if (app_) [[likely]] {
+                // Non-blocking publish: if client is saturated, drop this frame and continue
+                const bool ok = app_->publish("tick",
+                                              std::string_view(reinterpret_cast<const char*>(&buf), sizeof(buf)),
+                                              uWS::BINARY);
+                if (!ok) [[unlikely]] {
+                    dropped_tick_frames_.fetch_add(1, std::memory_order_relaxed);
+                }
             }
-            delete[] bytes;
         });
     }
 
@@ -243,14 +268,19 @@ public:
         return active_connections_;
     }
 
+    [[nodiscard]] uint64_t dropped_tick_frames() const noexcept {
+        return dropped_tick_frames_.load(std::memory_order_relaxed);
+    }
+
 private:
     int              port_;
     ShockCallback    on_shock_;
     us_listen_socket_t* listen_socket_ = nullptr;
     uWS::App*        app_             = nullptr;
-    uWS::Loop*       loop_            = nullptr; // owned by the network thread
+    uWS::Loop*       loop_            = nullptr;
     uint32_t         next_client_id_  = 0;
     uint32_t         active_connections_ = 0;
+    std::atomic<uint64_t> dropped_tick_frames_{0};
 };
 
 } // namespace optirisk::network
