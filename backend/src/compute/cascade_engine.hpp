@@ -20,6 +20,7 @@
 namespace optirisk::compute {
 
 inline constexpr uint32_t MAX_CASCADE_ROUNDS = 20;
+inline constexpr double MIN_PRICE_DENOMINATOR = 1.0e-9;
 
 struct CascadeStats {
     uint32_t rounds;
@@ -124,7 +125,7 @@ inline CascadeStats run_cascade_tick(
         }
         
         // Re-read potentially shifted Equities price to feed the Linear M2M below
-        if (current_round > 0) {
+        if (current_round > 0 && cur_eq > MIN_PRICE_DENOMINATOR) {
             iteration_shock.equities_delta = (clob.books[0].last_price - cur_eq) / cur_eq;
         }
 
@@ -138,7 +139,9 @@ inline CascadeStats run_cascade_tick(
         for (uint32_t i = 0; i < graph.num_nodes; ++i) {
             // we need a strict state machine: Healthy(0) -> Defaulted(1) -> Liquidated(2)
             if (graph.nodes.is_defaulted[i] == 1) {
-                liquidation_queue[liquidations_queued++] = i;
+                if (liquidations_queued < liquidation_queue.size()) [[likely]] {
+                    liquidation_queue[liquidations_queued++] = i;
+                }
                 graph.nodes.is_defaulted[i] = 2; // Mark as queued for liquidation
             }
         }
@@ -181,11 +184,16 @@ inline CascadeStats run_cascade_tick(
             
             // Generate the iteration shock for the next round based on price drops
             // The iteration shock represents the delta from the start of THIS ROUND.
-            iteration_shock.equities_delta = (clob.books[0].last_price - cur_eq) / cur_eq;
-            iteration_shock.real_estate_delta = (clob.books[1].last_price - cur_re) / cur_re;
-            iteration_shock.crypto_delta = (clob.books[2].last_price - cur_cr) / cur_cr;
-            iteration_shock.treasuries_delta = (clob.books[3].last_price - cur_tr) / cur_tr;
-            iteration_shock.corp_bonds_delta = (clob.books[4].last_price - cur_cb) / cur_cb;
+            iteration_shock.equities_delta =
+                cur_eq > MIN_PRICE_DENOMINATOR ? (clob.books[0].last_price - cur_eq) / cur_eq : 0.0;
+            iteration_shock.real_estate_delta =
+                cur_re > MIN_PRICE_DENOMINATOR ? (clob.books[1].last_price - cur_re) / cur_re : 0.0;
+            iteration_shock.crypto_delta =
+                cur_cr > MIN_PRICE_DENOMINATOR ? (clob.books[2].last_price - cur_cr) / cur_cr : 0.0;
+            iteration_shock.treasuries_delta =
+                cur_tr > MIN_PRICE_DENOMINATOR ? (clob.books[3].last_price - cur_tr) / cur_tr : 0.0;
+            iteration_shock.corp_bonds_delta =
+                cur_cb > MIN_PRICE_DENOMINATOR ? (clob.books[4].last_price - cur_cb) / cur_cb : 0.0;
 
             liquidations_queued = 0;
         }

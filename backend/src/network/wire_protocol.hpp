@@ -28,16 +28,18 @@ namespace optirisk::network {
 // ── Message Type Tags ─────────────────────────────────────────────
 // Interned as uint8_t — no string comparisons on the hot path.
 enum class MsgType : uint8_t {
-    ShockPayload   = 0x01,  // Frontend → Backend
-    TickDelta      = 0x02,  // Backend → Frontend (per-tick delta)
-    NodeSnapshot   = 0x03,  // Backend → Frontend (full node state)
-    MarketAnchors  = 0x04,  // Backend → Frontend (handshake)
-    CreditRevoke   = 0x05,  // Frontend → Backend (Shield Action)
-    ShortOrder     = 0x06,  // Frontend → Backend (Sword Action)
-    VaRReport      = 0x07,  // Backend → Frontend (Monte Carlo results)
-    BboChange      = 0x08,  // Backend → Frontend (ITCH limit order changes)
-    Heartbeat      = 0xFE,  // Bidirectional keepalive
-    Error          = 0xFF,  // Backend → Frontend (error notification)
+    ShockPayload   = 0x01,
+    TickDelta      = 0x02,
+    NodeSnapshot   = 0x03,
+    MarketAnchors  = 0x04,
+    CreditRevoke   = 0x05,
+    ShortOrder     = 0x06,
+    VaRReport      = 0x07,
+    BboChange      = 0x08,
+    SystemReset    = 0x09,  // [NEW] Cold-start command
+    VaRRequest     = 0x0A,  // [NEW] Trigger Monte Carlo Engine
+    Heartbeat      = 0xFE,
+    Error          = 0xFF,
 };
 
 // ── Message Header (prefixes every frame) ─────────────────────────
@@ -163,24 +165,23 @@ struct ShortOrder {
     uint64_t timestamp_ns;
 };
 
-// ── VaRReport (16 bytes) ──────────────────────────────────────────
+// ── VaRReport (56 bytes) ──────────────────────────────────────────
 // Sent after a Monte Carlo burst: gives the P95 VaR risk for a node.
 struct VaRReport {
-    uint32_t target_node;
-    uint32_t paths_run;
-    double   var_95;         // USD worst-case drop at 95% confidence
+    uint32_t target_node;      // 4 bytes
+    uint32_t paths_run;        // 4 bytes
+    double   var_95;           // 8 bytes
+    uint16_t buckets[16];      // 32 bytes (16 buckets * 2 bytes. Max paths 65k)
+    double   expected_loss;    // 8 bytes (Fills the remaining space perfectly)
 };
-
 #pragma pack(pop)
 
-static_assert(sizeof(TickDelta) == 56,
-              "TickDelta must be exactly 56 bytes");
+static_assert(sizeof(VaRReport) == 56, "VaRReport must be exactly 56 bytes");
 static_assert(std::is_trivially_copyable_v<TickDelta>,
               "TickDelta must be trivially copyable for memcpy");
 
 static_assert(sizeof(CreditRevoke) == 16, "CreditRevoke must be exactly 16 bytes");
 static_assert(sizeof(ShortOrder) == 24, "ShortOrder must be exactly 24 bytes");
-static_assert(sizeof(VaRReport) == 16, "VaRReport must be exactly 16 bytes");
 
 // ============================================================================
 // Serialization Helpers

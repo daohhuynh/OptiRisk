@@ -139,7 +139,8 @@ public:
                                const std::atomic<bool> &is_running) noexcept {
     const uint64_t seq = write_cursor_.value.load(std::memory_order_relaxed);
 
-    // Back-pressure: spin until consumer has freed a slot.
+    // Back-pressure: spin until consumer has freed a slot. The ring is full when
+    // (seq - consumer_cursor) >= RING_SIZE, so we must wait while consumer_cursor <= wrap_point.
     if (seq >= RING_SIZE) [[likely]] {
       const uint64_t wrap_point = seq - RING_SIZE;
       while (consumer_cursor.value.load(std::memory_order_acquire) <=

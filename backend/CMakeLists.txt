@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ── Maximum Performance Flags ───────────────────────────────────────
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mavx2 -mfma -Wall -Wextra -Werror -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -Wall -Wextra -Werror -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -fsanitize=address,undefined -Wall -Wextra -Werror")
 
 if(NOT CMAKE_BUILD_TYPE)

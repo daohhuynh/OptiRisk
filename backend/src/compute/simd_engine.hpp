@@ -322,52 +322,54 @@ struct CascadeResult {
 __attribute__((always_inline))
 inline CascadeResult run_cascade(optirisk::memory::CSRGraph& graph,
                                  const double* __restrict__ old_nav,
-                                 const uint32_t count) noexcept {
+                                 const uint32_t count,
+                                 const float default_threshold = DEFAULT_THRESH) noexcept {
     CascadeResult result{0, 0};
 
+    // Phase 3A: Initial Risk Score Update (Run EXACTLY once)
     for (uint32_t nid = 0; nid < count; ++nid) {
-        // ── Risk Score Update ─────────────────────────────────────
-        // Based on NAV decline relative to previous tick.
         const double prev = old_nav[nid];
         const double curr = graph.nodes.nav[nid];
 
-        if (prev > 1.0) [[likely]] {  // Avoid division by zero
+        if (prev > 1.0) [[likely]] {
             const double decline = prev - curr;
             if (decline > 0.0) {
-                float risk_delta = static_cast<float>(decline / prev) * 0.1f;
+                float risk_delta = static_cast<float>(decline / prev) * 1.8f;
                 graph.nodes.risk_score[nid] = std::clamp(
                     graph.nodes.risk_score[nid] + risk_delta, 0.0f, 1.0f);
             }
         }
+    }
 
-        // ── Default Detection ─────────────────────────────────────
-        if ((graph.nodes.risk_score[nid] > DEFAULT_THRESH || curr < 0.0) &&
-            graph.nodes.is_defaulted[nid] == 0) [[unlikely]] {
-            graph.nodes.is_defaulted[nid] = 1;
-            graph.nodes.risk_score[nid] = 1.0f; // Force risk score to 100%
-            ++result.defaults_triggered;
+    // Phase 3B: True Contagion Loop (Loops until no new defaults occur)
+    bool cascading = true;
+    while (cascading) {
+        cascading = false; // Assume fire is out until a node defaults
+        
+        for (uint32_t nid = 0; nid < count; ++nid) {
+            const double curr = graph.nodes.nav[nid];
+            
+            if ((graph.nodes.risk_score[nid] > default_threshold || curr < 0.0) &&
+                graph.nodes.is_defaulted[nid] == 0) [[unlikely]] {
+                
+                // We have a new default!
+                graph.nodes.is_defaulted[nid] = 1;
+                graph.nodes.risk_score[nid] = 1.0f;
+                ++result.defaults_triggered;
+                cascading = true; // Fire is still burning, keep looping!
 
-            // ── CSR Neighbor Propagation ──────────────────────────
-            const auto [begin, end] = graph.neighbors(nid);
+                // Propagate to neighbors
+                const auto [begin, end] = graph.neighbors(nid);
+                for (uint32_t e = begin; e < end; ++e) {
+                    const uint32_t neighbor = graph.edges.col_idx[e];
+                    const double   debt     = graph.edges.weight[e];
+                    const double   neighbor_assets = graph.nodes.total_assets[neighbor] + 1.0;
 
-            // Prefetch edge data for this node
-            if (begin < end) {
-                __builtin_prefetch(&graph.edges.col_idx[begin], 0, 3);
-                __builtin_prefetch(&graph.edges.weight[begin],  0, 3);
-            }
-
-            for (uint32_t e = begin; e < end; ++e) {
-                const uint32_t neighbor = graph.edges.col_idx[e];
-                const double   debt     = graph.edges.weight[e];
-                const double   neighbor_assets = graph.nodes.total_assets[neighbor] + 1.0;
-
-                // Contagion: debt-weighted risk injection
-                // Higher debt / lower assets → bigger hit
-                float contagion = static_cast<float>(debt / neighbor_assets) * CASCADE_FACTOR;
-                graph.nodes.risk_score[neighbor] = std::clamp(
-                    graph.nodes.risk_score[neighbor] + contagion, 0.0f, 1.0f);
-
-                ++result.edges_propagated;
+                    float contagion = static_cast<float>(debt / neighbor_assets) * CASCADE_FACTOR;
+                    graph.nodes.risk_score[neighbor] = std::clamp(
+                        graph.nodes.risk_score[neighbor] + contagion, 0.0f, 1.0f);
+                    ++result.edges_propagated;
+                }
             }
         }
     }
@@ -452,8 +454,27 @@ inline TickResult apply_shock_simd(optirisk::memory::CSRGraph& graph,
     //
     recompute_nav_simd(graph.nodes, N);
 
+    float default_threshold = DEFAULT_THRESH;
+    switch (shock.shock_type) {
+        case static_cast<uint32_t>(optirisk::network::ShockType::Lehman2008):
+            default_threshold = 0.62f;
+            break;
+        case static_cast<uint32_t>(optirisk::network::ShockType::Covid2020):
+            default_threshold = 0.86f;
+            break;
+        case static_cast<uint32_t>(optirisk::network::ShockType::RateHike):
+            default_threshold = 0.91f;
+            break;
+        case static_cast<uint32_t>(optirisk::network::ShockType::CryptoCrash):
+            default_threshold = 0.88f;
+            break;
+        default:
+            default_threshold = DEFAULT_THRESH;
+            break;
+    }
+
     // ── Phase 3: Cascade Detection + BFS Propagation ──────────────
-    CascadeResult cascade = run_cascade(graph, old_nav, N);
+    CascadeResult cascade = run_cascade(graph, old_nav, N, default_threshold);
 
     // ── TELEMETRY: capture cycle counter AFTER all work ─────────────
     const uint64_t t1 = read_cycles();

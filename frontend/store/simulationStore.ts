@@ -18,6 +18,7 @@ interface SimulationState {
   applyVaRReport: (msg: VaRReportMsg) => void;
   setMarketAnchors: (msg: MarketAnchorsMsg) => void;
   incrementDefaults: () => void;
+  incrementDefaultsBy: (count: number) => void;
   reset: () => void;
 }
 
@@ -70,6 +71,7 @@ export const useSimulationStore = create<SimulationState>((set) => ({
 
   setMarketAnchors: (msg) => set({ marketAnchors: msg }),
   incrementDefaults: () => set((s) => ({ totalDefaults: s.totalDefaults + 1 })),
+  incrementDefaultsBy: (count) => set((s) => ({ totalDefaults: s.totalDefaults + count })),
 
   reset: () => set({
     phase: 'pre_shock',

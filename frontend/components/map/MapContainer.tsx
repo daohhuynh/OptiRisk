@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import { useEffect, useRef } from 'react';
 import { useGraphStore } from '@/store/graphStore';
 import { parseInitialSnapshot } from '@/lib/graph/indexing';
-import { wsService } from '@/services/websocket';
 
 const GeoGraphScene = dynamic(() => import('./GeoGraphScene'), { ssr: false });
 
@@ -26,9 +25,6 @@ export default function MapContainer() {
       })
       .catch(console.error);
 
-    // Start WebSocket connection
-    wsService.start();
-    return () => wsService.stop();
   }, [loadSnapshot]);
 
   return (

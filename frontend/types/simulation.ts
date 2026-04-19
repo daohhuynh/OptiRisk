@@ -42,6 +42,8 @@ export interface VaRReportMsg {
   targetNode: number;
   pathsRun: number;
   var95: number;
+  buckets: number[];      // [NEW]
+  expectedLoss: number;   // [NEW]
 }
 
 export interface MarketAnchorsMsg {
