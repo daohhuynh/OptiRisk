@@ -153,7 +153,7 @@ Open [http://localhost:3000](http://localhost:3000). The page boots the SSE brid
 
 ## Team
 
-Built in 30 hours for HackPrinceton.
+Built in 30 hours for HackPrinceton at Princeton University.
 
 ## License
 
