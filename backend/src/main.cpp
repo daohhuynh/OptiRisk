@@ -183,7 +183,6 @@ static void compute_thread(optirisk::concurrency::DisruptorEngine& engine,
         }
 
         const auto& shock = engine.shock_ring.get(read_seq);
-        const uint32_t N = graph.num_nodes;
 
         // ── RESET PATH ──────────────────────────────────────────────
         // Frontend pressed RESET. Reload baseline graph state and emit

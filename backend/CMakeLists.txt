@@ -7,8 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ── Maximum Performance Flags ───────────────────────────────────────
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mavx2 -mfma -Wall -Wextra -Werror -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -fsanitize=address,undefined -Wall -Wextra -Werror")
+# Apple Silicon (arm64) doesn't support AVX2/FMA; use native optimizations instead
+if(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -Wall -Wextra -Werror -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -fsanitize=address,undefined -Wall -Wextra -Werror")
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mavx2 -mfma -Wall -Wextra -Werror -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG   "-O0 -g -fsanitize=address,undefined -Wall -Wextra -Werror")
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)

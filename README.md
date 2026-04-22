@@ -41,7 +41,7 @@ To handle ill-conditioned, real-world financial data, OptiRisk implements mathem
 
 ## Frontend — the cinematic map
 
-Located in `frontend/`. Next.js 15 (App Router) + TypeScript + Tailwind. The design/architecture bible is `frontend/CLAUDE.md`.
+Located in `frontend/`. Next.js 15 (App Router) + TypeScript + Tailwind.
 
 ### Rendering stack
 
