@@ -22,6 +22,16 @@ Dynamic memory allocation is entirely banned on the hot path. The system is desi
 * **CSR Struct-of-Arrays (SoA) Layout:** The graph utilizes a Compressed Sparse Row (CSR) format mapping `row_ptr`, `col_idx`, and `weight` arrays (98 KB total). The SoA layout ensures sequential access patterns that perfectly saturate the hardware prefetcher, achieving 100% cache-line utilization with zero padding waste. Graph traversal executes in strict $O(V + E)$ time.
 * **False Sharing Prevention:** Cross-core cache-line bouncing is eliminated by padding all atomic cursors, CLOB buffers, and SPSC ring buffer slots with explicit `alignas(64)` directives. Each pinned thread owns exclusive cache lines.
 
+## Central Limit Order Book
+
+The CLOB simulates forced liquidations across 5 global asset classes (Equities, Real Estate, Crypto, Treasuries, Corp Bonds) with realistic baseline prices and depth profiles. It models the slippage penalty incurred when a counterparty default forces a fire-sale into illiquid markets — the core mechanism by which contagion propagates through the network.
+
+* **Depth-Walking Liquidation:** `market_sell` / `market_buy` walk the bid/ask stacks level-by-level, filling against available depth and returning a `FillResult` containing average fill price, total proceeds, slippage vs. pre-trade mid, and the count of price levels consumed. The hot path is `__attribute__((always_inline))` annotated, branchless, and `[[unlikely]]`-hinted on the empty-book guard.
+* **Lazy Head-Increment Matching:** Consumed price levels are not erased mid-array (which would trigger $O(N)$ shifts and cache invalidation). Instead, a `bids_head` / `asks_head` pointer increments past depleted levels, leaving fills $O(\text{levels consumed})$ with zero memory movement.
+* **Ping-Pong BBO Double-Buffer:** The `CLOBEngine` maintains two `alignas(64)` BBO update buffers and an `std::atomic<uint8_t> active_buffer_idx`. The compute thread writes into the active buffer; the broadcast thread reads the inactive one. Buffer flips use `memory_order_release` on the store and `memory_order_acquire` on the read, guaranteeing the broadcast thread never observes a half-written packet stream. This eliminates the standard producer/consumer mutex without sacrificing correctness.
+* **Cache-Aligned Storage:** Both `OrderBook` and `PriceLevel` are `alignas(64)` to match cache-line boundaries. The 5-asset book array is statically allocated as `std::array<OrderBook, 5>`, fully embedded in the engine's `.bss` footprint with zero heap touches.
+* **Macro Shock Operator:** `apply_macro_shock(delta)` multiplies every active price level by `(1 + delta)` in a tight loop, modeling instantaneous market-wide repricing events without rebuilding the book.
+
 ## Hardware & Execution Mechanics
 
 Pipeline stalls and branch mispredictions are lethal to microsecond determinism. OptiRisk utilizes explicit hardware-level control flows:
@@ -146,8 +156,9 @@ Open [http://localhost:3000](http://localhost:3000). The page boots the SSE brid
 2. `README.md` architecture diagram — how data flows.
 3. `backend/src/main.cpp` — the three threads, one file.
 4. `backend/src/memory/csr_graph.hpp` — the whole 500-node network in one stack-allocated struct.
-5. `backend/src/network/wire_protocol.hpp` next to `frontend/lib/binary/schema.ts` — the binary contract.
-6. Run it, click a shock, watch the cascade.
+5. `backend/src/market/order_book.hpp` — the CLOB, depth-walking matching, and ping-pong BBO double-buffer.
+6. `backend/src/network/wire_protocol.hpp` next to `frontend/lib/binary/schema.ts` — the binary contract.
+7. Run it, click a shock, watch the cascade.
 
 ---
 
